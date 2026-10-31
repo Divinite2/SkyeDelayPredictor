@@ -66,3 +66,12 @@ Every deviation from the project documents (01–06) is recorded here: what, why
 | D-029 | 2026-10-31 | Simulated flights: carrier, destination and minute are sampled **together** from training-period departures at the same airport and local hour (falls back to all training hours if fewer than 5). Seed = `zlib.crc32(airport + YYYYMMDDHH)`, because Python's `hash()` is randomised per process. Pattern saved as `models/flight_pattern.joblib`. | Determinism across processes and machines | IDs are numbered after sorting by departure time |
 | D-030 | 2026-10-31 | Demo cases (L-013) are chosen by rule in `run_all.py` from **test-period hour-level results at 6 h ahead** and checked through the real `predict()`: true RED = highest P(>45) hour with at least 1 severe flight; calm = GREEN, all on time, at least 2 flights, calm and dry at the issue time, lowest P(>45); miss = ATL 2025-06-28 12:00Z; refusals 2 h and 13 h around the true-RED hour. | Reproducible, honest selection | `reports/demo_cases.json` + `.md` |
 | D-031 | 2026-10-31 | Added `joblib` to `requirements.txt` (it was already installed with scikit-learn, but it's imported directly). | Fresh-clone safety (J1.3) | — |
+
+## Lead decisions at B-3 review (b3-api). Details in docs/13_B3_Review_and_Next_Steps.md
+| ID | Decision |
+|---|---|
+| L-014 | Keep winter-validation thresholds. State honestly that RED covers about 1 in 4 summer hours. Season-aware thresholds go to next steps. |
+| L-015 | Swap the calm demo case for a true GREEN with HIGH/MEDIUM confidence (selection, not tuning). Rule logged. |
+| L-016 | `basis` key and `joblib` pin approved. Contract doc §2 updated. |
+| L-017 | Front-end presets must list whatever `cases` exist (no hard-coded ids) |
+

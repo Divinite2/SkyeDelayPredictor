@@ -40,9 +40,9 @@ splits:                                       # by TARGET hour, UTC
 airports:
   ATL: {icao: "KATL", tz: "America/New_York", runway_heading_deg: 80}
   DFW: {icao: "KDFW", tz: "America/Chicago",  runway_heading_deg: 180}
-risk_rules:            # STARTING values; back end tunes on VALIDATION only, never test
-  red:   {p_gt45_min: 0.30, capacity_index_max: 0.60}
-  amber: {p_gt45_min: 0.15, capacity_index_max: 0.80}
+risk_rules:            # TUNED at B-3 (L-011): colour from P(>45) only; capacity_index_max null = disabled
+  red:   {p_gt45_min: 0.172, capacity_index_max: null, basis: "validation 90th percentile"}
+  amber: {p_gt45_min: 0.117, capacity_index_max: null, basis: "validation 70th percentile"}
 confidence_rules:
   high:  {max_lead_h: 6,  max_obs_age_h: 1}
   low:   {min_lead_h: 10, min_obs_age_h: 3}   # either condition -> LOW
