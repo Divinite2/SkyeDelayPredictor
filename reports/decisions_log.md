@@ -27,3 +27,29 @@ Every deviation from the project documents (01–06) is recorded here: what, why
 | L-005 | `contract/make_examples.py` is kept but must not overwrite the canonical examples without a joint pull request | Front-end tests depend on the exact example values |
 | L-006 | Test files renamed: `test_contract_backend.py`, `test_contract_frontend.py` | Name clash on merge |
 
+## Back-end decisions at B-2 (imported by lead)
+| ID | Date | What | Why | Effect |
+|---|---|---|---|---|
+| D-013 | 2026-10-31 | Applied the lead's merge fixes (08 §2.1, B-a) to this copy of the repo: `triggered_by` is always a string (GREEN = "no RED or AMBER condition met"), `aar_*` are null or ≥ 0 in the schema, and `paths.raw_csv` is relative (`data/raw/...`). | The lead's merged repo (with the front end's authoritative schema) wasn't in the uploads. | **Sync needed:** when this work is merged into the shared repo, the front end's `schema.json` wins. Contract tests still pass here. |
+| D-014 | 2026-10-31 | `rel_volume = (deps + arrs in target hour + 0.5) / (training mean for the same local hour-of-week + 0.5)`. | With ~1 flight per hour, many hour-of-week means are close to 0, and a plain division explodes. The +0.5 smoothing keeps the ratio stable. "Movements" = departures + arrivals. | The feature stays normalised to each airport's own norm (T4). |
+| D-015 | 2026-10-31 | B0 climatology is shrunk in steps: airport × local hour × month → airport × local hour → airport rate, prior weight 20 flights at each step. | About 20 flights per cell, many cells empty. Unshrunk cell rates would be noise. | B0 is a fair, not a straw-man, baseline. |
+| D-016 | 2026-10-31 | Training and evaluation rows with no weather reading in the 12 h before the issue time are dropped (797 delay rows, 452 capacity rows). | `predict()` refuses these requests (NO_RECENT_WEATHER), so scoring them would be scoring requests the product never answers. | Under 0.5% of rows. |
+| D-017 | 2026-10-31 | Feature definitions: windows are (t − w, t]. The latest reading may be at exactly t. `hours_since_storm` is capped at 168 h. `storm_last_6h` = any convective code in the window. Only the planned storm features were built (note B-c). | Matches the 02 §A2 list. | — |
+| D-018 | 2026-10-31 | LightGBM search: 20 configurations (the instructed starting configuration plus 19 random, seed 42), selected by validation multi-logloss with early stopping on validation. The dataset is rebuilt per configuration (`feature_pre_filter=False`). Selected: num_leaves 63, min_data_in_leaf 400, lr 0.05, feature_fraction 0.6, lambda_l2 5, 19 trees. | Without `feature_pre_filter=False`, LightGBM can't change `min_data_in_leaf` between runs on the same dataset. | Validation scores are slightly optimistic, because validation was used for both early stopping and selection. The single test run is the unbiased figure. |
+| D-019 | 2026-10-31 | The leakage test compares with tolerance 1e-9, not bit-exact, and **adds an injected fake future storm** test. | Rolling sums on differently sized hourly grids can differ by about 1e-15 in floating point. The injected-storm test is a stronger proof than deletion alone. | 500 deletion + 100 injection rows, all identical. |
+| D-020 | 2026-10-31 | The capacity index for an hour is the capacity model applied to that hour's (shared) features. | Every arrival in an hour has the same hour-level features, so this equals the mean over that hour's arrivals, and it also works for hours with no sampled arrival (02 A3). | — |
+| D-021 | 2026-10-31 | Added a paired bootstrap (1,000 resamples of target hours) for the Brier(>45) difference against B0, plus a feature-importance table. | Validation has only ~1,450 flights and 176 severe ones. Shows whether the gain is real (08: "or an honest explanation"). | Extra evidence; no change to the gate rules. |
+| D-022 | 2026-10-31 | `run_all.py --no-test` (development) and `--data-only` flags. The default `python run_all.py` runs everything including the single test evaluation. | All development runs used `--no-test`; test scores weren't seen while tuning. | — |
+| D-023 | 2026-10-31 | **TUNING FROZEN; the test set is evaluated once** (B2.9). The final configuration was chosen on validation before this run. Nothing below was changed after test scores were seen. | 02 §0 rule 3, T12. | Test results in `reports/metrics.md`, section TEST. |
+
+## Lead decisions at B-2 review (b2-model). Details in docs/12_B2_Review_and_Next_Steps.md
+| ID | Decision |
+|---|---|
+| L-007 | Keep LightGBM as the main model. Report logistic regression (B1) alongside it. |
+| L-008 | Capacity range not shown: `index_low`/`index_high` = null, with the agreed `aar_note` |
+| L-009 | Pitch: the 3–12 h window is justified operationally. Accuracy is flat across it; most signal is season, time and traffic. |
+| L-010 | Hours with no sampled departures → LOW confidence, with a stated reason |
+| L-011 | Colour from P(>45) only. RED ≥ validation 90th percentile, AMBER ≥ 70th. Capacity conditions null (disabled). Back end changes config and code in one PR. |
+| L-012 | No re-tuning after the test run (T12). Storm-feature improvement goes on the next-steps slide. |
+| L-013 | Demo cases: true RED, true GREEN, failure case ATL 2025-06-28, 2 refusals, with honest labels |
+

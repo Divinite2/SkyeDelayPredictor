@@ -4,6 +4,8 @@
 
 **Your role, in plain words:** you **connect, check and report**. You **don't redesign or re-tune** anything. If the back end gives wrong numbers or the screen shows something wrong, you **record it precisely and send it back** to the owner (back end or front end) through the lead. The only code you may write is **glue** (scripts, a smoke test, README run steps), always logged.
 
+**Updated by `docs/12_B2_Review_and_Next_Steps.md`:** expected demo results (true RED → RED, failure case → GREEN, calm → GREEN) and the capacity line with no range plus a grey note. Do T-0 there first.
+
 **Read first:** `docs/04_Data_Contract.md` (the agreed format) · `docs/08_Next_Checkpoints.md` (J-1 section) · `docs/05_Initial_Handover.md` §5 (trap register).
 
 ---
@@ -99,7 +101,7 @@ for row in rows:
 ```
 **Pass:**
 - no assertion errors
-- every demo case gives the status its label says (storm → `ok`, ideally RED · calm → `ok` GREEN · too soon / too far → `refused`)
+- every demo case gives the status its label says (true RED → `ok` RED · calm → `ok` GREEN · failure case → `ok` GREEN, the honest miss · too soon / too far → `refused`)
 - `bad_airport` → `UNKNOWN_AIRPORT` · `not_on_hour` → `NOT_ON_THE_HOUR` · `out_of_range` → `OUT_OF_DATA_RANGE` · `icao_code` → `ok`, with the airport returned as `DFW`
 - **every call after the first takes under 1 s**. The first call may be slower because it loads the model; note how long it took.
 

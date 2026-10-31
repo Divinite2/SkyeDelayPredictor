@@ -1,5 +1,7 @@
 # 08 · Lead Review of Checkpoints 0 / B-1 / F-1, and the Next Checkpoints
 
+> **UPDATE:** B-2 is approved. **The current plan and the updated B-3 / F-3 / J-1 / F-2 items are in `docs/12_B2_Review_and_Next_Steps.md`**, which overrides this file where they differ.
+
 ## 1. Verdicts
 
 | Checkpoint | Verdict | One-line reason |
