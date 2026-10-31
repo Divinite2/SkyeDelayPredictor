@@ -5,9 +5,11 @@ All from the TEST period (Apr–Jul 2025), never seen in training or tuning. Eac
 | id | airport | now (UTC) | target (UTC) | target local | predict() says | what actually happened |
 |---|---|---|---|---|---|---|
 | true_red | DFW | 2025-05-19T19:00:00Z | 2025-05-20T01:00:00Z | Mon 19 May 2025 20:00 local | RED · P(>45) 0.403 · conf HIGH | 1 of 1 sampled departures severely delayed (> 45 min late or cancelled), 0 on time |
-| calm | ATL | 2025-04-05T05:00:00Z | 2025-04-05T11:00:00Z | Sat 05 Apr 2025 07:00 local | GREEN · P(>45) 0.054 · conf LOW | 0 of 2 sampled departures severely delayed (> 45 min late or cancelled), 2 on time |
+| calm | ATL | 2025-04-10T10:00:00Z | 2025-04-10T16:00:00Z | Thu 10 Apr 2025 12:00 local | GREEN · P(>45) 0.062 · conf HIGH | 0 of 3 sampled departures severely delayed (> 45 min late or cancelled), 3 on time |
 | miss | ATL | 2025-06-28T06:00:00Z | 2025-06-28T12:00:00Z | Sat 28 Jun 2025 08:00 local | GREEN · P(>45) 0.099 · conf LOW | 2 of 2 sampled departures severely delayed (> 45 min late or cancelled), 0 on time |
 | too_soon | DFW | 2025-05-19T23:00:00Z | 2025-05-20T01:00:00Z | Mon 19 May 2025 20:00 local | refused LEAD_TOO_SHORT | (no forecast by design) |
 | too_far | DFW | 2025-05-19T12:00:00Z | 2025-05-20T01:00:00Z | Mon 19 May 2025 20:00 local | refused LEAD_TOO_LONG | (no forecast by design) |
 
 Honesty notes: the true-RED case was chosen as the highest-P(>45) test hour with at least one severe delay, whatever the weather. It is **not** claimed as a storm correctly flagged. The failure case is an honest miss and should show GREEN.
+
+Calm-case selection rule (B3.10 / L-015, applied by `build_demo_cases()`): (1) test period, 6 h ahead, ATL or DFW; (2) true GREEN: predict() returns GREEN and every sampled departure in the hour was on time, with at least 2 flight(s); (3) calm, dry weather at the issue time (`coco_calm == 1`, no precipitation); (4) confidence HIGH or MEDIUM as returned by predict(); (5) daytime: target hour 08:00-18:00 local; (6) lowest P(>45), ties -> earliest date. Hours meeting rules 1-3 and 5: 79; of these, also meeting rule 4: 65. Fallback not needed (>= 2 flights kept).

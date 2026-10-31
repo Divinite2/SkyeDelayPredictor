@@ -1,5 +1,5 @@
 {
-  "version": "delayband-20261031-0046350",
+  "version": "delayband-20261031-c4b8916",
   "cases": [
     {
       "id": "true_red",
@@ -10,10 +10,10 @@
     },
     {
       "id": "calm",
-      "label": "True GREEN: calm hour, all flights on time (ATL, 6 h ahead)",
+      "label": "True GREEN: calm daytime hour, all flights on time, confidence HIGH (ATL, 6 h ahead)",
       "airport": "ATL",
-      "now_utc": "2025-04-05T05:00:00Z",
-      "target_hour_utc": "2025-04-05T11:00:00Z"
+      "now_utc": "2025-04-10T10:00:00Z",
+      "target_hour_utc": "2025-04-10T16:00:00Z"
     },
     {
       "id": "miss",

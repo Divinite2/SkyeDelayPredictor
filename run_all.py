@@ -201,10 +201,30 @@ def build_demo_cases(test_rows, T, ctx, fl):
     lead = 6
     h = hour_table(test_rows, T["E"]["LGBM"], T["cap_dep"], lead)
     first = test_rows[test_rows["lead"] == lead].drop_duplicates(["airport", "T"]).set_index(["airport", "T"])
-    h = h.join(first[["coco_calm", "prcp_sum_6h", "prcp_mm"]], on=["airport", "T"])
+    h = h.join(first[["coco_calm", "prcp_sum_6h", "prcp_mm", "local_hour"]], on=["airport", "T"])
     red = h[h["n_severe"] >= 1].sort_values(["p45", "n_severe"], ascending=False).iloc[0]
-    calm = h[(h["risk"] == "GREEN") & (h["n_on_time"] == h["n_flights"]) & (h["n_flights"] >= 2)
-             & (h["coco_calm"] == 1) & (h["prcp_mm"].fillna(0) == 0)].sort_values("p45").iloc[0]
+    # B3.10 / L-015 calm-case selection rule (I-001): test period, 6 h ahead, ATL/DFW; true GREEN with
+    # all sampled departures on time (>= 2 flights); calm and dry at issue time; daytime target
+    # (08:00-18:00 local); lowest P(>45), ties -> earliest; first with confidence HIGH or MEDIUM.
+    calm, calm_min_flights, calm_n_candidates = None, None, 0
+    for min_flights in (2, 1):  # fallback: relax ">= 2 flights" to ">= 1" only if no candidate
+        cand = h[(h["risk"] == "GREEN") & (h["n_on_time"] == h["n_flights"]) & (h["n_flights"] >= min_flights)
+                 & (h["coco_calm"] == 1) & (h["prcp_mm"].fillna(0) == 0)
+                 & (h["local_hour"] >= 8) & (h["local_hour"] <= 18)].sort_values(["p45", "T"])
+        ok = []
+        for _, r in cand.iterrows():
+            Tt = pd.Timestamp(r["T"])
+            resp = api.predict(r["airport"], Tt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                               (Tt - pd.Timedelta(hours=lead)).strftime("%Y-%m-%dT%H:%M:%SZ"))
+            if resp["status"] == "ok" and resp["risk_level"] == "GREEN" \
+                    and resp["confidence"]["level"] in ("HIGH", "MEDIUM"):
+                ok.append((r, resp["confidence"]["level"]))
+        if ok:
+            calm, calm_conf = ok[0]
+            calm_min_flights, calm_n_candidates, calm_n_pool = min_flights, len(ok), len(cand)
+            break
+    if calm is None:
+        sys.exit("B3.10: no calm demo candidate meets L-015 even with >= 1 flight. Tell the lead.")
     miss_T = pd.Timestamp("2025-06-28T12:00:00Z")
     miss = h[(h["airport"] == "ATL") & (h["T"] == miss_T)].iloc[0]
     iso = lambda t: pd.Timestamp(t).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -216,7 +236,7 @@ def build_demo_cases(test_rows, T, ctx, fl):
                 f"({SEV_DEF}), {int(r['n_on_time'])} on time")
     cases = [
         ("true_red", f"True RED: highest-risk test hour where severe delays happened ({red['airport']}, 6 h ahead)", red),
-        ("calm", f"True GREEN: calm hour, all flights on time ({calm['airport']}, 6 h ahead)", calm),
+        ("calm", f"True GREEN: calm daytime hour, all flights on time, confidence {calm_conf} ({calm['airport']}, 6 h ahead)", calm),
         ("miss", "Known failure case: morning after a storm, last reading 7 h old (ATL, 6 h ahead)", miss),
     ]
     out, lines = [], ["# Demo cases (B3.8 / L-013)", "",
@@ -247,7 +267,15 @@ def build_demo_cases(test_rows, T, ctx, fl):
         {"version": card["model_version"], "cases": out}, indent=2) + "\n")
     lines += ["", "Honesty notes: the true-RED case was chosen as the highest-P(>45) test hour with at least "
               "one severe delay, whatever the weather. It is **not** claimed as a storm correctly flagged. "
-              "The failure case is an honest miss and should show GREEN."]
+              "The failure case is an honest miss and should show GREEN.", "",
+              "Calm-case selection rule (B3.10 / L-015, applied by `build_demo_cases()`): (1) test period, "
+              "6 h ahead, ATL or DFW; (2) true GREEN: predict() returns GREEN and every sampled departure in "
+              f"the hour was on time, with at least {calm_min_flights} flight(s); (3) calm, dry weather at the "
+              "issue time (`coco_calm == 1`, no precipitation); (4) confidence HIGH or MEDIUM as returned by "
+              "predict(); (5) daytime: target hour 08:00-18:00 local; (6) lowest P(>45), ties -> earliest date. "
+              f"Hours meeting rules 1-3 and 5: {calm_n_pool}; of these, also meeting rule 4: {calm_n_candidates}. "
+              + ("Fallback used: '>= 2 flights' relaxed to '>= 1'." if calm_min_flights == 1
+                 else "Fallback not needed (>= 2 flights kept).")]
     (path("reports_dir") / "demo_cases.md").write_text("\n".join(lines) + "\n")
     print("  demo cases written")
 
