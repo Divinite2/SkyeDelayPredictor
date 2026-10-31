@@ -7,6 +7,7 @@ A traffic flow controller enters an **airport and an hour**. The tool returns de
 2. `docs/06_First_Checkpoints.md`: what to deliver, in order
 3. Back end: `docs/02_Instructions_Backend.md` · Front end: `docs/03_Instructions_Frontend.md`
 4. Shared rules: `docs/04_Data_Contract.md` · Version control: `docs/07_Version_Control.md`
+5. **Current status and next checkpoints: `docs/08_Next_Checkpoints.md`**
 
 ## Setup
 ```

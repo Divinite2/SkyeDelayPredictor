@@ -1,6 +1,8 @@
 # 04 · Data Contract: The Rules Both Back End and Front End Must Follow
 
-**Status:** DRAFT v1.0. Back-end lead: ☐ agreed · Front-end lead: ☐ agreed
+**Status:** **AGREED v1.0** (lead approval at merge `cp0-contract`). Back-end lead: ☑ · Front-end lead: ☑ · Authoritative files: `contract/schema.json` and `contract/examples/*.json` in the repo. If this document and those files ever disagree, the files win and this document gets fixed.
+
+**v1.0 clarifications from the merge:** `recommendation.triggered_by` is **always a string**, never null (GREEN uses `"no RED or AMBER condition met"`). Request fields may be null on refused or error responses only. Optional numbers (`aar_*`) are null or ≥ 0.
 **Rule:** this document is the **single source of truth** for what passes between the back end and the front end. If code and this document disagree, **the code is wrong**. Any change needs: (1) both leads to agree, (2) `schema_version` bumped, (3) the example files and the contract test updated **in the same commit**.
 
 > **Plain-language summary:** the back end does all the thinking (cleaning, predicting, deciding the colour, choosing the recommendation). The front end only **asks** and **displays**. Both sides agree in advance on exactly how a question is asked and what an answer looks like, down to time zones, units, rounding and what "missing" means. Then neither side can quietly break the other.

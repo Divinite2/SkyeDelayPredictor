@@ -3,121 +3,39 @@
   "status": "ok",
   "request": {
     "airport": "DFW",
-    "target_hour_utc": "2025-05-06T15:00:00Z",
-    "now_utc": "2025-05-06T11:00:00Z",
+    "target_hour_utc": "2025-05-20T15:00:00Z",
+    "now_utc": "2025-05-20T11:00:00Z",
     "lead_time_h": 4
   },
   "risk_level": "GREEN",
-  "hour_delay_risk": {
-    "p_gt15": 0.142,
-    "p_gt30": 0.081,
-    "p_gt45": 0.052,
-    "p_gt60": 0.031
-  },
+  "hour_delay_risk": {"p_gt15": 0.182, "p_gt30": 0.104, "p_gt45": 0.061, "p_gt60": 0.038},
   "capacity": {
-    "index": 0.93,
-    "index_low": 0.85,
-    "index_high": 0.99,
-    "aar_est": null,
-    "aar_low": null,
-    "aar_high": null,
+    "index": 0.91, "index_low": 0.84, "index_high": 0.97,
+    "aar_est": null, "aar_low": null, "aar_high": null,
     "aar_note": "Nominal arrival rate not configured; capacity shown as share of scheduled arrivals delivered on time."
   },
   "drivers": [
-    {
-      "label": "Clear conditions",
-      "value": "Clear (code 1)",
-      "observed_at_utc": "2025-05-06T11:00:00Z",
-      "effect": "decreases"
-    },
-    {
-      "label": "Morning off-peak hour",
-      "value": "10:00 local",
-      "observed_at_utc": null,
-      "effect": "decreases"
-    }
+    {"label": "Clear conditions", "value": "Fair (code 2)", "observed_at_utc": "2025-05-20T10:00:00Z", "effect": "decreases"},
+    {"label": "Light wind (crosswind worst case)", "value": "9 km/h", "observed_at_utc": "2025-05-20T10:00:00Z", "effect": "decreases"},
+    {"label": "Normal traffic for this hour", "value": "10:00 local", "observed_at_utc": null, "effect": "decreases"}
   ],
   "recommendation": {
     "rule_id": "GREEN-1",
-    "text": "No action suggested by the model.",
-    "triggered_by": "no RED or AMBER condition met"
+    "text": "No pre-emptive action indicated. Continue normal monitoring.",
+    "triggered_by": "p_gt45 < 0.15 and capacity_index >= 0.80"
   },
-  "confidence": {
-    "level": "HIGH",
-    "reasons": [
-      "Lead time 4 h",
-      "Last weather reading 0 h before forecast"
-    ]
-  },
-  "weather_basis": {
-    "last_obs_utc": "2025-05-06T11:00:00Z",
-    "obs_age_h": 0
-  },
+  "confidence": {"level": "HIGH", "reasons": ["Lead time 4 h", "Last weather reading 1 h before forecast"]},
+  "weather_basis": {"last_obs_utc": "2025-05-20T10:00:00Z", "obs_age_h": 1},
   "flights": [
-    {
-      "flight_id": "SIM-DFW-2025050615-01",
-      "carrier": "AA",
-      "origin": "DFW",
-      "dest": "LAX",
-      "sched_dep_utc": "2025-05-06T15:00:00Z",
-      "source": "SIMULATED",
-      "p_gt15": 0.142,
-      "p_gt30": 0.081,
-      "p_gt45": 0.052,
-      "p_gt60": 0.031
-    },
-    {
-      "flight_id": "SIM-DFW-2025050615-02",
-      "carrier": "DL",
-      "origin": "DFW",
-      "dest": "ATL",
-      "sched_dep_utc": "2025-05-06T15:15:00Z",
-      "source": "SIMULATED",
-      "p_gt15": 0.142,
-      "p_gt30": 0.081,
-      "p_gt45": 0.052,
-      "p_gt60": 0.031
-    },
-    {
-      "flight_id": "SIM-DFW-2025050615-03",
-      "carrier": "UA",
-      "origin": "DFW",
-      "dest": "DEN",
-      "sched_dep_utc": "2025-05-06T15:25:00Z",
-      "source": "SIMULATED",
-      "p_gt15": 0.142,
-      "p_gt30": 0.081,
-      "p_gt45": 0.052,
-      "p_gt60": 0.031
-    },
-    {
-      "flight_id": "SIM-DFW-2025050615-04",
-      "carrier": "AA",
-      "origin": "DFW",
-      "dest": "ORD",
-      "sched_dep_utc": "2025-05-06T15:40:00Z",
-      "source": "SIMULATED",
-      "p_gt15": 0.142,
-      "p_gt30": 0.081,
-      "p_gt45": 0.052,
-      "p_gt60": 0.031
-    },
-    {
-      "flight_id": "SIM-DFW-2025050615-05",
-      "carrier": "AA",
-      "origin": "DFW",
-      "dest": "MIA",
-      "sched_dep_utc": "2025-05-06T15:50:00Z",
-      "source": "SIMULATED",
-      "p_gt15": 0.142,
-      "p_gt30": 0.081,
-      "p_gt45": 0.052,
-      "p_gt60": 0.031
-    }
+    {"flight_id": "SIM-DFW-2025052015-01", "carrier": "AA", "origin": "DFW", "dest": "LAX", "sched_dep_utc": "2025-05-20T15:00:00Z", "source": "SIMULATED", "p_gt15": 0.182, "p_gt30": 0.104, "p_gt45": 0.061, "p_gt60": 0.038},
+    {"flight_id": "SIM-DFW-2025052015-02", "carrier": "AA", "origin": "DFW", "dest": "ORD", "sched_dep_utc": "2025-05-20T15:10:00Z", "source": "SIMULATED", "p_gt15": 0.182, "p_gt30": 0.104, "p_gt45": 0.061, "p_gt60": 0.038},
+    {"flight_id": "SIM-DFW-2025052015-03", "carrier": "DL", "origin": "DFW", "dest": "ATL", "sched_dep_utc": "2025-05-20T15:25:00Z", "source": "SIMULATED", "p_gt15": 0.182, "p_gt30": 0.104, "p_gt45": 0.061, "p_gt60": 0.038},
+    {"flight_id": "SIM-DFW-2025052015-04", "carrier": "UA", "origin": "DFW", "dest": "DEN", "sched_dep_utc": "2025-05-20T15:40:00Z", "source": "SIMULATED", "p_gt15": 0.182, "p_gt30": 0.104, "p_gt45": 0.061, "p_gt60": 0.038},
+    {"flight_id": "SIM-DFW-2025052015-05", "carrier": "NK", "origin": "DFW", "dest": "LAS", "sched_dep_utc": "2025-05-20T15:50:00Z", "source": "SIMULATED", "p_gt15": 0.182, "p_gt30": 0.104, "p_gt45": 0.061, "p_gt60": 0.038}
   ],
   "data_period": "TEST",
-  "model_version": "MOCK",
-  "generated_at_utc": "2025-05-06T11:00:01Z",
+  "model_version": "mock-contract-v1.0",
+  "generated_at_utc": "2025-05-20T11:00:02Z",
   "refusal": null,
   "error": null
 }

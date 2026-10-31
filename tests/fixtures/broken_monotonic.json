@@ -1,0 +1,129 @@
+{
+  "schema_version": "1.0",
+  "status": "ok",
+  "request": {
+    "airport": "ATL",
+    "target_hour_utc": "2025-06-14T22:00:00Z",
+    "now_utc": "2025-06-14T16:00:00Z",
+    "lead_time_h": 6
+  },
+  "risk_level": "RED",
+  "hour_delay_risk": {
+    "p_gt15": 0.702,
+    "p_gt30": 0.301,
+    "p_gt45": 0.384,
+    "p_gt60": 0.281
+  },
+  "capacity": {
+    "index": 0.7,
+    "index_low": 0.6,
+    "index_high": 0.8,
+    "aar_est": null,
+    "aar_low": null,
+    "aar_high": null,
+    "aar_note": "Nominal arrival rate not configured; capacity shown as share of scheduled arrivals delivered on time."
+  },
+  "drivers": [
+    {
+      "label": "Thunderstorm reported",
+      "value": "Thunderstorm (code 25)",
+      "observed_at_utc": "2025-06-14T15:00:00Z",
+      "effect": "increases"
+    },
+    {
+      "label": "Strong wind (crosswind worst case)",
+      "value": "30 km/h",
+      "observed_at_utc": "2025-06-14T15:00:00Z",
+      "effect": "increases"
+    },
+    {
+      "label": "Evening peak hour",
+      "value": "18:00 local",
+      "observed_at_utc": null,
+      "effect": "increases"
+    }
+  ],
+  "recommendation": {
+    "rule_id": "RED-1",
+    "text": "Consider a pre-emptive arrival-rate reduction or ground delay programme for this hour.",
+    "triggered_by": "p_gt45 >= 0.30"
+  },
+  "confidence": {
+    "level": "MEDIUM",
+    "reasons": [
+      "Lead time 6 h",
+      "Last weather reading 1 h before forecast"
+    ]
+  },
+  "weather_basis": {
+    "last_obs_utc": "2025-06-14T15:00:00Z",
+    "obs_age_h": 1
+  },
+  "flights": [
+    {
+      "flight_id": "SIM-ATL-2025061422-01",
+      "carrier": "DL",
+      "origin": "ATL",
+      "dest": "LGA",
+      "sched_dep_utc": "2025-06-14T22:05:00Z",
+      "source": "SIMULATED",
+      "p_gt15": 0.702,
+      "p_gt30": 0.301,
+      "p_gt45": 0.384,
+      "p_gt60": 0.281
+    },
+    {
+      "flight_id": "SIM-ATL-2025061422-02",
+      "carrier": "WN",
+      "origin": "ATL",
+      "dest": "BWI",
+      "sched_dep_utc": "2025-06-14T22:20:00Z",
+      "source": "SIMULATED",
+      "p_gt15": 0.702,
+      "p_gt30": 0.301,
+      "p_gt45": 0.384,
+      "p_gt60": 0.281
+    },
+    {
+      "flight_id": "SIM-ATL-2025061422-03",
+      "carrier": "AA",
+      "origin": "ATL",
+      "dest": "DFW",
+      "sched_dep_utc": "2025-06-14T22:35:00Z",
+      "source": "SIMULATED",
+      "p_gt15": 0.702,
+      "p_gt30": 0.301,
+      "p_gt45": 0.384,
+      "p_gt60": 0.281
+    },
+    {
+      "flight_id": "SIM-ATL-2025061422-04",
+      "carrier": "DL",
+      "origin": "ATL",
+      "dest": "MCO",
+      "sched_dep_utc": "2025-06-14T22:45:00Z",
+      "source": "SIMULATED",
+      "p_gt15": 0.702,
+      "p_gt30": 0.301,
+      "p_gt45": 0.384,
+      "p_gt60": 0.281
+    },
+    {
+      "flight_id": "SIM-ATL-2025061422-05",
+      "carrier": "UA",
+      "origin": "ATL",
+      "dest": "ORD",
+      "sched_dep_utc": "2025-06-14T22:55:00Z",
+      "source": "SIMULATED",
+      "p_gt15": 0.702,
+      "p_gt30": 0.301,
+      "p_gt45": 0.384,
+      "p_gt60": 0.281
+    }
+  ],
+  "data_period": "TEST",
+  "model_version": "mock-contract-v1.0",
+  "generated_at_utc": "2025-06-14T16:00:02Z",
+  "refusal": null,
+  "error": null
+}

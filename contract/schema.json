@@ -1,99 +1,156 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "atc-weather-risk/contract/v1.0",
-  "title": "predict() response v1.0 - see docs/04_Data_Contract.md",
+  "$id": "contract/schema.json",
+  "title": "predict() response, schema v1.0",
+  "description": "Authoritative contract between back end and front end (04_Data_Contract.md section 5). All times UTC ISO 8601 with Z. Missing = null.",
   "type": "object",
   "required": ["schema_version", "status", "request", "refusal", "error"],
-  "$defs": {
-    "utc": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"},
-    "utc_hour": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:00:00Z$"},
-    "prob": {"type": "number", "minimum": 0, "maximum": 1},
-    "risk": {
-      "type": "object", "additionalProperties": false,
-      "required": ["p_gt15", "p_gt30", "p_gt45", "p_gt60"],
-      "properties": {"p_gt15": {"$ref": "#/$defs/prob"}, "p_gt30": {"$ref": "#/$defs/prob"},
-                     "p_gt45": {"$ref": "#/$defs/prob"}, "p_gt60": {"$ref": "#/$defs/prob"}}
-    },
-    "nullable_num": {"type": ["number", "null"]}
-  },
   "properties": {
     "schema_version": {"const": "1.0"},
     "status": {"enum": ["ok", "refused", "error"]},
+    "request": {"$ref": "#/$defs/request"},
+    "refusal": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/refusal"}]},
+    "error": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/error"}]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "ok"}}},
+      "then": {
+        "required": ["risk_level", "hour_delay_risk", "capacity", "drivers", "recommendation",
+                     "confidence", "weather_basis", "flights", "data_period", "model_version",
+                     "generated_at_utc"],
+        "properties": {
+          "refusal": {"type": "null"},
+          "error": {"type": "null"},
+          "risk_level": {"enum": ["RED", "AMBER", "GREEN"]},
+          "hour_delay_risk": {"$ref": "#/$defs/delay_risk"},
+          "capacity": {"$ref": "#/$defs/capacity"},
+          "drivers": {"type": "array", "maxItems": 3, "items": {"$ref": "#/$defs/driver"}},
+          "recommendation": {"$ref": "#/$defs/recommendation"},
+          "confidence": {"$ref": "#/$defs/confidence"},
+          "weather_basis": {"$ref": "#/$defs/weather_basis"},
+          "flights": {"type": "array", "items": {"$ref": "#/$defs/flight"}},
+          "data_period": {"enum": ["TRAIN", "VALIDATION", "TEST"]},
+          "model_version": {"type": "string", "minLength": 1},
+          "generated_at_utc": {"$ref": "#/$defs/utc"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "refused"}}},
+      "then": {"properties": {"refusal": {"$ref": "#/$defs/refusal"}, "error": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "error"}}},
+      "then": {"properties": {"error": {"$ref": "#/$defs/error"}, "refusal": {"type": "null"}}}
+    }
+  ],
+  "$defs": {
+    "utc": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"},
+    "utc_or_null": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/utc"}]},
+    "prob": {"type": "number", "minimum": 0, "maximum": 1},
+    "prob_or_null": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/prob"}]},
     "request": {
-      "type": "object", "required": ["airport", "target_hour_utc", "now_utc"],
+      "type": "object",
+      "required": ["airport", "target_hour_utc", "now_utc", "lead_time_h"],
       "properties": {
         "airport": {"type": "string"},
         "target_hour_utc": {"type": "string"},
         "now_utc": {"type": "string"},
-        "lead_time_h": {"type": ["integer", "null"]}
+        "lead_time_h": {"oneOf": [{"type": "null"}, {"type": "integer"}]}
       }
     },
-    "risk_level": {"enum": ["GREEN", "AMBER", "RED"]},
-    "hour_delay_risk": {"$ref": "#/$defs/risk"},
+    "delay_risk": {
+      "type": "object",
+      "required": ["p_gt15", "p_gt30", "p_gt45", "p_gt60"],
+      "properties": {
+        "p_gt15": {"$ref": "#/$defs/prob"},
+        "p_gt30": {"$ref": "#/$defs/prob"},
+        "p_gt45": {"$ref": "#/$defs/prob"},
+        "p_gt60": {"$ref": "#/$defs/prob"}
+      }
+    },
     "capacity": {
       "type": "object",
       "required": ["index", "index_low", "index_high", "aar_est", "aar_low", "aar_high", "aar_note"],
       "properties": {
-        "index": {"$ref": "#/$defs/prob"}, "index_low": {"$ref": "#/$defs/prob"}, "index_high": {"$ref": "#/$defs/prob"},
-        "aar_est": {"$ref": "#/$defs/nullable_num"}, "aar_low": {"$ref": "#/$defs/nullable_num"},
-        "aar_high": {"$ref": "#/$defs/nullable_num"}, "aar_note": {"type": ["string", "null"]}
+        "index": {"$ref": "#/$defs/prob_or_null"},
+        "index_low": {"$ref": "#/$defs/prob_or_null"},
+        "index_high": {"$ref": "#/$defs/prob_or_null"},
+        "aar_est": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}]},
+        "aar_low": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}]},
+        "aar_high": {"oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}]},
+        "aar_note": {"oneOf": [{"type": "null"}, {"type": "string"}]}
       }
     },
-    "drivers": {
-      "type": "array", "maxItems": 3,
-      "items": {"type": "object", "required": ["label", "value", "observed_at_utc", "effect"],
-        "properties": {"label": {"type": "string"}, "value": {"type": "string"},
-          "observed_at_utc": {"oneOf": [{"$ref": "#/$defs/utc"}, {"type": "null"}]},
-          "effect": {"enum": ["increases", "decreases"]}}}
+    "driver": {
+      "type": "object",
+      "required": ["label", "value", "observed_at_utc", "effect"],
+      "properties": {
+        "label": {"type": "string", "minLength": 1},
+        "value": {"oneOf": [{"type": "null"}, {"type": "string"}]},
+        "observed_at_utc": {"$ref": "#/$defs/utc_or_null"},
+        "effect": {"enum": ["increases", "decreases"]}
+      }
     },
     "recommendation": {
-      "type": "object", "required": ["rule_id", "text", "triggered_by"],
-      "properties": {"rule_id": {"type": "string"}, "text": {"type": "string"}, "triggered_by": {"type": "string"}}
+      "type": "object",
+      "required": ["rule_id", "text", "triggered_by"],
+      "properties": {
+        "rule_id": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1},
+        "triggered_by": {"type": "string"}
+      }
     },
     "confidence": {
-      "type": "object", "required": ["level", "reasons"],
-      "properties": {"level": {"enum": ["HIGH", "MEDIUM", "LOW"]},
-                     "reasons": {"type": "array", "minItems": 1, "items": {"type": "string"}}}
+      "type": "object",
+      "required": ["level", "reasons"],
+      "properties": {
+        "level": {"enum": ["HIGH", "MEDIUM", "LOW"]},
+        "reasons": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      }
     },
     "weather_basis": {
-      "type": "object", "required": ["last_obs_utc", "obs_age_h"],
-      "properties": {"last_obs_utc": {"$ref": "#/$defs/utc"}, "obs_age_h": {"type": "number", "minimum": 0}}
+      "type": "object",
+      "required": ["last_obs_utc", "obs_age_h"],
+      "properties": {
+        "last_obs_utc": {"$ref": "#/$defs/utc_or_null"},
+        "obs_age_h": {"oneOf": [{"type": "null"}, {"type": "integer", "minimum": 0}]}
+      }
     },
-    "flights": {
-      "type": "array",
-      "items": {"type": "object",
-        "required": ["flight_id", "carrier", "origin", "dest", "sched_dep_utc", "source", "p_gt15", "p_gt30", "p_gt45", "p_gt60"],
-        "properties": {
-          "flight_id": {"type": "string", "pattern": "^SIM-[A-Z]{3}-\\d{10}-\\d{2}$"},
-          "carrier": {"type": "string"}, "origin": {"type": "string"}, "dest": {"type": "string"},
-          "sched_dep_utc": {"$ref": "#/$defs/utc"}, "source": {"const": "SIMULATED"},
-          "p_gt15": {"$ref": "#/$defs/prob"}, "p_gt30": {"$ref": "#/$defs/prob"},
-          "p_gt45": {"$ref": "#/$defs/prob"}, "p_gt60": {"$ref": "#/$defs/prob"}}}
+    "flight": {
+      "type": "object",
+      "required": ["flight_id", "carrier", "origin", "dest", "sched_dep_utc", "source",
+                   "p_gt15", "p_gt30", "p_gt45", "p_gt60"],
+      "properties": {
+        "flight_id": {"type": "string", "pattern": "^SIM-[A-Z]{3}-\\d{10}-\\d{2}$"},
+        "carrier": {"type": "string"},
+        "origin": {"type": "string"},
+        "dest": {"type": "string"},
+        "sched_dep_utc": {"$ref": "#/$defs/utc"},
+        "source": {"const": "SIMULATED"},
+        "p_gt15": {"$ref": "#/$defs/prob"},
+        "p_gt30": {"$ref": "#/$defs/prob"},
+        "p_gt45": {"$ref": "#/$defs/prob"},
+        "p_gt60": {"$ref": "#/$defs/prob"}
+      }
     },
-    "data_period": {"enum": ["TRAIN", "VALIDATION", "TEST"]},
-    "model_version": {"type": "string"},
-    "generated_at_utc": {"$ref": "#/$defs/utc"},
     "refusal": {
-      "oneOf": [{"type": "null"},
-        {"type": "object", "required": ["code", "message"],
-         "properties": {"code": {"enum": ["LEAD_TOO_SHORT", "LEAD_TOO_LONG", "NOT_ON_THE_HOUR", "UNKNOWN_AIRPORT", "OUT_OF_DATA_RANGE", "NO_RECENT_WEATHER"]},
-                        "message": {"type": "string"}}}]
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {"enum": ["LEAD_TOO_SHORT", "LEAD_TOO_LONG", "NOT_ON_THE_HOUR",
+                          "UNKNOWN_AIRPORT", "OUT_OF_DATA_RANGE", "NO_RECENT_WEATHER"]},
+        "message": {"type": "string", "minLength": 1}
+      }
     },
     "error": {
-      "oneOf": [{"type": "null"},
-        {"type": "object", "required": ["code", "message"], "properties": {"code": {"type": "string"}, "message": {"type": "string"}}}]
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {"type": "string", "minLength": 1},
+        "message": {"type": "string"}
+      }
     }
-  },
-  "allOf": [
-    {"if": {"properties": {"status": {"const": "ok"}}},
-     "then": {"required": ["risk_level", "hour_delay_risk", "capacity", "drivers", "recommendation", "confidence",
-                           "weather_basis", "flights", "data_period", "model_version", "generated_at_utc"],
-              "properties": {"refusal": {"type": "null"}, "error": {"type": "null"},
-                             "request": {"properties": {"target_hour_utc": {"$ref": "#/$defs/utc_hour"}, "now_utc": {"$ref": "#/$defs/utc_hour"},
-                                                        "lead_time_h": {"type": "integer", "minimum": 3, "maximum": 12}}}}}},
-    {"if": {"properties": {"status": {"const": "refused"}}},
-     "then": {"properties": {"refusal": {"type": "object"}, "error": {"type": "null"}}}},
-    {"if": {"properties": {"status": {"const": "error"}}},
-     "then": {"properties": {"refusal": {"type": "null"}, "error": {"type": "object"}}}}
-  ]
+  }
 }
