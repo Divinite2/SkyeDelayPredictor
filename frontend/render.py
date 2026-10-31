@@ -19,6 +19,21 @@ DASH = "—"
 ERROR_HEADLINE = ("The forecast could not be produced. Do not rely on this tool for this request.")
 PERIOD_WARNING = ("This date is in the model's {period} period, so it isn't a fair test. "
                   "Use Apr–Jul 2025 for honest demos.")
+# Display style for the back end's decisions. These map a level the back end already chose
+# to colours/words; they never set thresholds. Shape differs too, so colour is never alone.
+LEVEL_STYLE = {
+    "RED":   {"colour": "#c62828", "tint": "#fdecea", "icon": "●",
+              "headline": "High risk of severe delays"},
+    "AMBER": {"colour": "#b57f00", "tint": "#fff6db", "icon": "▲",
+              "headline": "Elevated risk of severe delays"},
+    "GREEN": {"colour": "#2e7d32", "tint": "#e9f5ea", "icon": "■",
+              "headline": "Low risk of severe delays"},
+}
+CONFIDENCE_STYLE = {
+    "HIGH":   {"colour": "#2e7d32", "tint": "#e9f5ea"},
+    "MEDIUM": {"colour": "#b57f00", "tint": "#fff6db"},
+    "LOW":    {"colour": "#6b7280", "tint": "#eef0f3"},
+}
 REFUSAL_TITLES = {
     "LEAD_TOO_SHORT": "Too soon to forecast",
     "LEAD_TOO_LONG": "Too far ahead to forecast",
@@ -149,8 +164,9 @@ def driver_lines(airport: str, drivers: list[dict], target_utc: str | None = Non
         if t:
             same_day = tgt_day is not None and utc_to_local(airport, parse_utc(t)).date() == tgt_day
             time = fmt_local(airport, t, with_date=not same_day)
+        eff = d.get("effect")
         out.append({"label": d["label"], "value": d.get("value"), "time": time,
-                    "effect": d.get("effect")})
+                    "effect": eff, "arrow": {"increases": "▲", "decreases": "▼"}.get(eff, "•")})
     return out
 
 
@@ -192,8 +208,17 @@ def view_model(resp: dict) -> dict:
     tgt = parse_utc(req["target_hour_utc"])
     end = tgt + timedelta(hours=1)
     icao = load_config()["airports"].get(apt, {}).get("icao", "")
+    sev = load_config()["severe_threshold_min"]
     return {
         "kind": "ok",
+        "airport": f"{apt} ({icao})",
+        "when": f"{fmt_local(apt, tgt, with_date=True)}–{fmt_local(apt, end)}",
+        "lead_text": f"forecast {req['lead_time_h']} h ahead",
+        "level_style": LEVEL_STYLE[resp["risk_level"]],
+        "confidence_style": CONFIDENCE_STYLE[resp["confidence"]["level"]],
+        "severe_label": f"> {sev} min",
+        "severe_text": pct(resp["hour_delay_risk"].get(f"p_gt{sev}")),
+        "request_utc": f"now {req['now_utc']} · target {req['target_hour_utc']}",
         "header": f"{apt} ({icao}) · {fmt_local(apt, tgt, with_date=True)}–{fmt_local(apt, end)} "
                   f"· forecast made {req['lead_time_h']} h ahead",
         "risk_level": resp["risk_level"],

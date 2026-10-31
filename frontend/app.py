@@ -1,9 +1,11 @@
 """Controller dashboard: single page. Run with:  streamlit run frontend/app.py
 BACKEND=mock (default) | real
 Displays only what predict() returns; formatting is the only computation here.
+v1.2 UI refresh: Skye mascot, colour-tinted result card, headline tiles, collapsible details.
 """
 from __future__ import annotations
 
+import base64
 import os
 import time
 import sys
@@ -21,46 +23,78 @@ from frontend.demo_cases import MOCK_SAMPLE_PATH, load_presets  # noqa: E402
 CFG = R.load_config()
 DEMO_DATE = date.fromisoformat(os.getenv("DEMO_DATE", "2025-06-14"))   # default in test period
 DEMO_HOUR = 12                  # local
-LEVEL_COLOUR = {"RED": "#c62828", "AMBER": "#e0a100", "GREEN": "#2e7d32"}
-LEVEL_ICON = {"RED": "●", "AMBER": "▲", "GREEN": "■"}   # shape differs too, not colour alone
+LOGO_PATH = Path(__file__).resolve().parent / "assets" / "skye.svg"
+LOGO_URI = "data:image/svg+xml;base64," + base64.b64encode(LOGO_PATH.read_bytes()).decode()
 
-st.set_page_config(page_title="Airport Capacity & Delay Risk", layout="wide")
+try:
+    st.set_page_config(page_title="Skye · Airport Delay Risk", page_icon=str(LOGO_PATH), layout="wide")
+except Exception:  # older Streamlit without SVG page icons
+    st.set_page_config(page_title="Skye · Airport Delay Risk", page_icon="✈️", layout="wide")
+
 st.markdown("""<style>
-.block-container {padding-top:3.2rem; max-width:1100px;}
-.utc-note {color:#8a8f98; font-size:0.8rem; margin-top:-0.4rem;}
-.card {border:1px solid #d0d4da; border-radius:8px; overflow:hidden; margin-top:0.4rem;}
-.card-head {display:flex; justify-content:space-between; align-items:center;
-            padding:0.7rem 1rem; font-weight:600; font-size:1.05rem;}
-.lvl {padding:0.2rem 0.8rem; border-radius:4px; color:#fff; font-weight:800; letter-spacing:0.05em;}
-.sec {padding:0.6rem 1rem; border-top:1px solid #eceef1;}
-.sec-title {font-size:0.75rem; font-weight:700; color:#5f6670; letter-spacing:0.08em; margin-bottom:0.3rem;}
-.row {display:flex; align-items:center; gap:0.8rem; margin:0.15rem 0;}
-.row .lab {width:5.5rem; font-variant-numeric:tabular-nums;}
-.track {flex:0 0 55%; height:0.85rem; background:#eceef1; border-radius:3px;}
-.fill {height:100%; background:#5b6573; border-radius:3px;}
-.row .val {width:3rem; text-align:right; font-variant-numeric:tabular-nums;}
-.row.severe {font-weight:800;}
-.row.severe .fill {background:#262b33;}
-.sevtag {font-size:0.75rem; font-weight:700; color:#262b33;}
+.block-container {padding-top:2.2rem; max-width:1080px;}
+/* header */
+.hdr {display:flex; align-items:center; gap:0.9rem; margin-bottom:0.6rem;}
+.hdr img {width:58px; height:58px;}
+.hdr h1 {font-size:1.45rem; margin:0; padding:0; line-height:1.2;}
+.hdr .sub {color:#5f6670; font-size:0.9rem;}
+.pill {display:inline-block; padding:0.08rem 0.55rem; border-radius:999px; font-size:0.72rem;
+       font-weight:700; letter-spacing:0.04em; vertical-align:middle;}
+.pill.real {background:#e9f5ea; color:#2e7d32;} .pill.mock {background:#fff6db; color:#8a6100;}
+.step {font-size:0.72rem; font-weight:700; color:#1f5fa8; letter-spacing:0.08em; margin:0.2rem 0 -0.2rem;}
+.utc-note {color:#8a8f98; font-size:0.76rem; margin-top:-0.3rem;}
 .muted {color:#8a8f98; font-size:0.8rem;}
-.est {display:flex; gap:0.8rem; align-items:baseline; font-size:1.05rem; margin:0.15rem 0;}
-.est-lab {flex:0 0 13rem; color:#5f6670; font-size:0.9rem;}
-.kv b {margin-right:0.3rem;}
-ul.why {margin:0; padding-left:1.1rem;} ul.why li {margin:0.1rem 0;}
-table.sim {width:100%; border-collapse:collapse; font-style:italic; color:#7a808a; font-size:0.9rem;}
-table.sim th {text-align:left; font-style:normal; font-size:0.75rem; color:#5f6670; padding:0.2rem 0.4rem;}
-table.sim td {padding:0.2rem 0.4rem; border-top:1px solid #f0f1f3; font-variant-numeric:tabular-nums;}
-.simtag {font-style:normal; font-size:0.7rem; font-weight:700; border:1px solid #9aa0a8;
-         border-radius:3px; padding:0 0.3rem; color:#5f6670;}
-.refused {border:1px solid #c4c8ce; background:#f4f5f7; border-radius:8px; padding:1rem 1.2rem;}
+/* result card */
+.card {border:1px solid #e1e4e8; border-radius:14px; overflow:hidden; background:#fff;
+       box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.hero {display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1rem 1.2rem;}
+.badge {display:inline-block; padding:0.3rem 0.9rem; border-radius:8px; color:#fff;
+        font-weight:800; letter-spacing:0.06em; font-size:1.05rem;}
+.headline {font-size:1.25rem; font-weight:700; margin-top:0.35rem;}
+.where {color:#3c424b; font-size:0.92rem; margin-top:0.15rem;}
+.conf {text-align:right; min-width:12rem;}
+.conf .cp {display:inline-block; padding:0.2rem 0.7rem; border-radius:999px; font-weight:700; font-size:0.85rem;}
+.conf .why {font-size:0.75rem; color:#5f6670; margin-top:0.25rem;}
+.tiles {display:grid; grid-template-columns:repeat(4, 1fr); gap:0.7rem; padding:0.9rem 1.2rem;}
+.tile {border:1px solid #eceef1; border-radius:10px; padding:0.6rem 0.8rem; background:#fafbfc;}
+.tile .k {font-size:0.7rem; font-weight:700; color:#5f6670; letter-spacing:0.07em; text-transform:uppercase;}
+.tile .v {font-size:1.35rem; font-weight:800; margin-top:0.15rem; font-variant-numeric:tabular-nums;}
+.tile .s {font-size:0.75rem; color:#8a8f98;}
+.cols {display:grid; grid-template-columns:1fr 1fr; gap:0; border-top:1px solid #eceef1;}
+.cols > div {padding:0.8rem 1.2rem;} .cols > div + div {border-left:1px solid #eceef1;}
+.sec-title {font-size:0.72rem; font-weight:700; color:#5f6670; letter-spacing:0.08em; margin-bottom:0.45rem;}
+.row {display:flex; align-items:center; gap:0.6rem; margin:0.3rem 0;}
+.row .lab {width:4.6rem; font-variant-numeric:tabular-nums; font-size:0.9rem;}
+.track {flex:1; height:0.8rem; background:#eceef1; border-radius:99px; overflow:hidden;}
+.fill {height:100%; background:#9aa3ae; border-radius:99px;}
+.row .val {width:2.8rem; text-align:right; font-variant-numeric:tabular-nums;}
+.row.severe {font-weight:800;}
+.sevtag {font-size:0.68rem; font-weight:700; padding:0 0.35rem; border-radius:4px; color:#fff;}
+ul.why {list-style:none; margin:0; padding:0;} ul.why li {margin:0.35rem 0; display:flex; gap:0.5rem;}
+.arr {font-size:0.8rem; width:1rem; text-align:center; padding-top:0.1rem;}
+.arr.increases {color:#c62828;} .arr.decreases {color:#2e7d32;}
+.do {margin:0 1.2rem 0.9rem; padding:0.7rem 0.9rem; border-radius:10px; background:#eaf2fb;
+     border-left:4px solid #1f5fa8;}
+.do .sec-title {color:#1f5fa8; margin-bottom:0.2rem;}
+details.more {padding:0.55rem 1.2rem 0.8rem; border-top:1px solid #eceef1; font-size:0.83rem; color:#5f6670;}
+details.more summary {cursor:pointer; font-weight:600; color:#3c424b;}
+details.more div {margin-top:0.3rem;}
+.foot {margin-top:0.45rem;}
+/* other states */
+.empty {display:flex; align-items:center; gap:1rem; padding:1.2rem; border:1px dashed #c9d6e6;
+        border-radius:14px; background:#f6f9fd; color:#3c424b;}
+.empty img {width:52px; opacity:0.9;}
+.refused {border:1px solid #c4c8ce; background:#f4f5f7; border-radius:14px; padding:1rem 1.2rem;}
 .refused h4 {margin:0 0 0.4rem 0; color:#3c424b;}
-.errbox {border:2px solid #c62828; border-radius:8px; padding:1rem 1.2rem; background:#fff;}
+.errbox {border:2px solid #c62828; border-radius:14px; padding:1rem 1.2rem; background:#fff;}
 .errbox b {color:#c62828;}
-.banner {background:#fff4c2; border:1px solid #e0c34a; border-radius:6px; padding:0.5rem 0.9rem;
-         margin-bottom:0.4rem; color:#5a4a00;}
+.banner {background:#fff4c2; border:1px solid #e0c34a; border-radius:10px; padding:0.5rem 0.9rem;
+         margin-bottom:0.5rem; color:#5a4a00;}
+@media (max-width: 800px) {.tiles {grid-template-columns:1fr 1fr;} .cols {grid-template-columns:1fr;}
+  .cols > div + div {border-left:none; border-top:1px solid #eceef1;} .hero {flex-direction:column; align-items:flex-start;}
+  .conf {text-align:left;}}
 </style>""", unsafe_allow_html=True)
 
-st.markdown("#### Airport Capacity & Delay Risk · 3–12 h ahead")
 
 # ---------------- Back end (loaded once; F3.3 / F3.4) ----------------
 @st.cache_resource(show_spinner="Loading model…")
@@ -70,6 +104,13 @@ def get_predict(mode: str):
 
 MODE = backend_mode()
 predict = get_predict(MODE)
+
+st.markdown(
+    f"<div class='hdr'><img src='{LOGO_URI}' alt='Skye mascot'/><div>"
+    f"<h1>Skye · Airport Delay &amp; Capacity Risk</h1>"
+    f"<div class='sub'>Hourly departure-delay risk, 3–12 h ahead. A decision aid: the controller decides. "
+    f"<span class='pill {MODE}'>BACK END: {MODE.upper()}</span></div></div></div>",
+    unsafe_allow_html=True)
 
 # ---------------- Session defaults (widgets are driven by these keys) ----------------
 airports = list(CFG["airports"].keys())
@@ -111,75 +152,74 @@ def _apply_preset():
     ss.pop("resp", None)
 
 
-if PRESETS:
-    st.selectbox("Demo cases", ["—"] + [c["label"] for c in PRESETS], key="preset",
-                 on_change=_apply_preset, help="Filled from reports/demo_cases.json")
-else:  # F3b.2: picker hidden, manual inputs still work
-    st.markdown("<div class='muted'>Demo cases not available</div>", unsafe_allow_html=True)
+# ---------------- Input panel ----------------
+with st.container(border=True):
+    if PRESETS:
+        st.selectbox("Demo cases (optional, fills the fields below)",
+                     ["—"] + [c["label"] for c in PRESETS], key="preset",
+                     on_change=_apply_preset, help="Filled from reports/demo_cases.json")
+    else:  # F3b.2: picker hidden, manual inputs still work
+        st.markdown("<div class='muted'>Demo cases not available</div>", unsafe_allow_html=True)
 
-# ---------------- Input bar ----------------
-free_entry = st.session_state["free_entry"]
-c_apt, c_day, c_hr, c_tgt, c_btn = st.columns([1.3, 1.3, 0.9, 2.2, 0.8])
+    free_entry = st.session_state["free_entry"]
+    st.markdown("<div class='step'>① AIRPORT &nbsp;·&nbsp; ② NOW &nbsp;·&nbsp; ③ HOUR TO FORECAST</div>",
+                unsafe_allow_html=True)
+    c_apt, c_day, c_hr, c_tgt, c_btn = st.columns([1.3, 1.3, 0.9, 2.2, 0.9])
 
-with c_apt:
-    if free_entry:
-        airport_in = st.text_input("Airport (IATA/ICAO)", key="apt_txt").strip().upper()
-    else:
-        airport_in = st.selectbox("Airport", airports, key="apt_sel",
-                                  format_func=lambda a: f"{a} ({CFG['airports'][a]['icao']})")
-# Time zone for the pickers: the chosen airport if known, otherwise the first configured.
-tz_airport = _known(airport_in) or airports[0]
+    with c_apt:
+        if free_entry:
+            airport_in = st.text_input("Airport (IATA/ICAO)", key="apt_txt").strip().upper()
+        else:
+            airport_in = st.selectbox("Airport", airports, key="apt_sel",
+                                      format_func=lambda a: f"{a} ({CFG['airports'][a]['icao']})")
+    # Time zone for the pickers: the chosen airport if known, otherwise the first configured.
+    tz_airport = _known(airport_in) or airports[0]
 
-with c_day:
-    now_day = st.date_input("Now · date (local)", key="now_day")
-with c_hr:
-    now_hour = st.selectbox("Now · hour", list(range(24)), key="now_hour",
-                            format_func=lambda h: f"{h:02d}:00")
-now_utc = R.local_to_utc(tz_airport, now_day, now_hour)
+    with c_day:
+        now_day = st.date_input("Now · date (local)", key="now_day")
+    with c_hr:
+        now_hour = st.selectbox("Now · hour", list(range(24)), key="now_hour",
+                                format_func=lambda h: f"{h:02d}:00")
+    now_utc = R.local_to_utc(tz_airport, now_day, now_hour)
 
-with c_tgt:
-    if not free_entry:
-        opts = dict(R.target_options(now_utc))          # lead_h -> target_utc
-        if st.session_state["tgt_lead"] not in opts:
-            st.session_state["tgt_lead"] = min(opts)
-        lead_sel = st.selectbox(
-            "Target hour (local)", list(opts), key="tgt_lead",
-            format_func=lambda h: f"{R.fmt_local(tz_airport, opts[h], with_date=True)}  ·  +{h} h")
-        target_utc = opts[lead_sel]
-    else:
-        t1, t2 = st.columns(2)
-        with t1:
-            t_day = st.date_input("Target · date", key="t_day")
-        with t2:
-            t_hour = st.selectbox("Target · hour", list(range(24)), key="t_hour",
-                                  format_func=lambda h: f"{h:02d}:00")
-        target_utc = R.local_to_utc(tz_airport, t_day, t_hour)
+    with c_tgt:
+        if not free_entry:
+            opts = dict(R.target_options(now_utc))          # lead_h -> target_utc
+            if st.session_state["tgt_lead"] not in opts:
+                st.session_state["tgt_lead"] = min(opts)
+            lead_sel = st.selectbox(
+                "Target hour (local)", list(opts), key="tgt_lead",
+                format_func=lambda h: f"+{h} h  ·  {R.fmt_local(tz_airport, opts[h], with_date=True)}")
+            target_utc = opts[lead_sel]
+        else:
+            t1, t2 = st.columns(2)
+            with t1:
+                t_day = st.date_input("Target · date", key="t_day")
+            with t2:
+                t_hour = st.selectbox("Target · hour", list(range(24)), key="t_hour",
+                                      format_func=lambda h: f"{h:02d}:00")
+            target_utc = R.local_to_utc(tz_airport, t_day, t_hour)
 
-now_s, target_s = R.to_utc_str(now_utc), R.to_utc_str(target_utc)
+    now_s, target_s = R.to_utc_str(now_utc), R.to_utc_str(target_utc)
 
+    def _start():
+        st.session_state["busy"] = True
+        st.session_state["pending"] = (airport_in, target_s, now_s)
 
-def _start():
-    st.session_state["busy"] = True
-    st.session_state["pending"] = (airport_in, target_s, now_s)
+    with c_btn:
+        st.markdown("<div style='height:1.75rem'></div>", unsafe_allow_html=True)
+        st.button("Check", type="primary", use_container_width=True,
+                  on_click=_start, disabled=st.session_state.get("busy", False))
 
-
-with c_btn:
-    st.write("")
-    st.write("")
-    st.button("Check", type="primary", use_container_width=True,
-              on_click=_start, disabled=st.session_state.get("busy", False))
-
-st.checkbox("Test mode: type any airport and any target hour (to demonstrate refusals)",
-            key="free_entry")
-tz_label = R.utc_to_local(tz_airport, now_utc).strftime("%Z")
-st.markdown(f"<div class='utc-note'>Sent to model in UTC — now: {now_s} · target: {target_s} "
-            f"· times above are {tz_airport} local ({tz_label}) · back end: {MODE}</div>",
-            unsafe_allow_html=True)
-st.divider()
+    tz_label = R.utc_to_local(tz_airport, now_utc).strftime("%Z")
+    st.checkbox("Test mode: type any airport and any target hour (to demonstrate refusals)",
+                key="free_entry")
+    st.markdown(f"<div class='utc-note'>Times are {tz_airport} local ({tz_label}). "
+                f"Sent to model in UTC: now {now_s} · target {target_s}</div>", unsafe_allow_html=True)
 
 # ---------------- Call (one click -> one predict; response shown untouched) ----------------
 if st.session_state.get("pending"):
-    with st.spinner("Calculating…"):
+    with st.spinner("Skye is checking the skies…"):
         _t0 = time.perf_counter()
         st.session_state["resp"] = predict(*st.session_state.pop("pending"))
         st.session_state["elapsed_s"] = time.perf_counter() - _t0  # C4b (v1.1): shown in footer
@@ -187,60 +227,87 @@ if st.session_state.get("pending"):
     st.rerun()
 
 
-# ---------------- Cards ----------------
+# ---------------- Result card ----------------
+def _tile(key: str, value: str, sub: str = "", colour: str | None = None) -> str:
+    style = f" style='color:{colour}'" if colour else ""
+    return (f"<div class='tile'><div class='k'>{key}</div><div class='v'{style}>{value}</div>"
+            f"<div class='s'>{sub}</div></div>")
+
+
 def ok_card(v: dict) -> str:
-    lvl = v["risk_level"]
-    col = LEVEL_COLOUR[lvl]
+    lvl, ls, cs = v["risk_level"], v["level_style"], v["confidence_style"]
+    col = ls["colour"]
+
+    hero = (f"<div class='hero' style='background:{ls['tint']}; border-left:8px solid {col}'><div>"
+            f"<span class='badge' style='background:{col}'>{ls['icon']} {lvl}</span>"
+            f"<div class='headline' style='color:{col}'>{ls['headline']}</div>"
+            f"<div class='where'><b>{escape(v['airport'])}</b> · {escape(v['when'])} · "
+            f"{escape(v['lead_text'])}</div></div>"
+            f"<div class='conf'><div class='sec-title' style='margin:0 0 0.2rem'>CONFIDENCE</div>"
+            f"<span class='cp' style='background:{cs['tint']}; color:{cs['colour']}'>"
+            f"{v['confidence_level']}</span>"
+            f"<div class='why'>{escape(v['confidence_reasons'])}</div></div></div>")
+
+    e = v.get("delay_estimate")
+    c = v.get("capacity")
+    tiles = _tile(f"Severe delay ({v['severe_label']})", v["severe_text"], "chance this hour", col)
+    if e:
+        tiles += _tile("Middle estimate", escape(e["typical"]), "typical departure")
+        tiles += _tile(escape(e["bad_label"]), escape(e["bad"]), f"{e['bad_prob']} chance")
+    if c:
+        tiles += _tile("Arrival capacity", escape(c["text"].split(" ")[0]),
+                       "of scheduled arrivals on time")
+
     rows = "".join(
         f"<div class='row{' severe' if r['severe'] else ''}'><span class='lab'>{r['label']}</span>"
-        f"<div class='track'><div class='fill' style='width:{r['width']:.1f}%'></div></div>"
+        f"<div class='track'><div class='fill' style='width:{r['width']:.1f}%"
+        f"{'; background:' + col if r['severe'] else ''}'></div></div>"
         f"<span class='val'>{r['text']}</span>"
-        f"{'<span class=sevtag>◀ severe</span>' if r['severe'] else ''}</div>"
+        f"{f'<span class=sevtag style=background:{col}>severe</span>' if r['severe'] else ''}</div>"
         for r in v["risk_rows"])
-    cap = ""
-    if v["capacity"]:
-        c = v["capacity"]
-        title = f" title='{escape(c['note'])}'" if c["note"] else ""
-        aar = f" · {escape(c['aar'])}" if c["aar"] else ""
-        cap = (f"<div class='sec'><div class='sec-title'>ARRIVAL CAPACITY</div>"
-               f"<span{title}>{escape(c['text'])}{aar} <span class='muted'>ⓘ</span></span>"
-               + (f"<div class='muted'>{escape(c['visible_note'])}</div>" if c["visible_note"] else "")
-               + "</div>")
-    why = ""
+    risk = f"<div><div class='sec-title'>DEPARTURE DELAY RISK</div>{rows}</div>"
+
     if v["drivers"]:
         items = "".join(
-            f"<li>{escape(d['label'])}{': ' + escape(d['value']) if d['value'] else ''}"
-            f"{' <span class=muted>(' + d['time'] + ')</span>' if d['time'] else ''}</li>"
+            f"<li><span class='arr {d['effect'] or ''}'>{d['arrow']}</span><span>{escape(d['label'])}"
+            f"{': ' + escape(d['value']) if d['value'] else ''}"
+            f"{' <span class=muted>(' + d['time'] + ')</span>' if d['time'] else ''}</span></li>"
             for d in v["drivers"])
-        why = f"<div class='sec'><div class='sec-title'>WHY</div><ul class='why'>{items}</ul></div>"
-    est = ""
-    if v.get("delay_estimate"):
-        e = v["delay_estimate"]
-        est = (f"<div class='sec'><div class='sec-title'>LIKELY DELAY · typical departure this hour</div>"
-               f"<div class='est'><span class='est-lab'>Middle estimate</span><b>{escape(e['typical'])}</b></div>"
-               f"<div class='est'><span class='est-lab'>{escape(e['bad_label'])}</span><b>{escape(e['bad'])}</b>"
-               f" <span class='muted'>({e['bad_prob']})</span></div>"
-               f"<div class='muted'>{escape(e['method'] or '')}</div></div>")
-    return (
-        f"<div class='card' style='border-left:6px solid {col}'>"
-        f"<div class='card-head'><span>{escape(v['header'])}</span>"
-        f"<span class='lvl' style='background:{col}'>{LEVEL_ICON[lvl]} {lvl}</span></div>"
-        f"{est}"
-        f"<div class='sec'><div class='sec-title'>DEPARTURE DELAY RISK</div>{rows}</div>"
-        f"{cap}{why}"
-        f"<div class='sec'><div class='sec-title'>DO · suggestion, controller decides</div>"
-        f"{escape(v['do_text'])} <span class='muted'>({escape(v['rule'])})</span></div>"
-        f"<div class='sec kv'><span class='sec-title'>CONFIDENCE&nbsp;</span>"
-        f"<b>{v['confidence_level']}</b><span class='muted'>· {escape(v['confidence_reasons'])}</span></div>"
-        f"</div>"
-        f"<div class='muted' style='margin-top:0.4rem'>{escape(v['footer'])} · Back end: {MODE}"
-        + (f" · answered in {st.session_state['elapsed_s']:.2f} s" if st.session_state.get('elapsed_s') is not None else "")
-        + (" (demo data, not a forecast)" if MODE == "mock" else "") + "</div>")
+        why = (f"<div><div class='sec-title'>WHY · top factors "
+               f"<span class='muted'>(▲ raises risk, ▼ lowers it)</span></div><ul class='why'>{items}</ul></div>")
+    else:
+        why = "<div><div class='sec-title'>WHY</div><span class='muted'>No major factors reported.</span></div>"
+
+    do = (f"<div class='do'><div class='sec-title'>SUGGESTED ACTION · controller decides</div>"
+          f"{escape(v['do_text'])}</div>")
+
+    details = [f"Decision rule: {escape(v['rule'])}"]
+    if c:
+        details.append(f"Capacity: {escape(c['text'])}{' · ' + escape(c['aar']) if c['aar'] else ''}")
+        if c["visible_note"] or c["note"]:
+            details.append(escape(c["visible_note"] or c["note"]))
+    if e and e.get("method"):
+        details.append(f"Likely delay: {escape(e['method'])}")
+    details.append(f"Request (UTC): {escape(v['request_utc'])}")
+    details.append(escape(v["footer"]))
+    more = ("<details class='more'><summary>Details &amp; method</summary>"
+            + "".join(f"<div>{d}</div>" for d in details) + "</details>")
+
+    cap_note = (f"<div class='muted' style='padding:0 1.2rem 0.6rem'>ⓘ {escape(c['visible_note'])}</div>"
+                if c and c["visible_note"] else "")
+    elapsed = st.session_state.get("elapsed_s")
+    foot = (f"<div class='muted foot'>Back end: {MODE}"
+            + (f" · answered in {elapsed:.2f} s" if elapsed is not None else "")
+            + (" (demo data, not a forecast)" if MODE == "mock" else "") + "</div>")
+    return (f"<div class='card'>{hero}<div class='tiles'>{tiles}</div>{cap_note}"
+            f"<div class='cols'>{risk}{why}</div>{do}{more}</div>{foot}")
 
 
 resp = st.session_state.get("resp")
 if resp is None:
-    st.caption("Choose an airport and hour, then press **Check**.")
+    st.markdown(f"<div class='empty'><img src='{LOGO_URI}' alt=''/><div><b>Ready when you are.</b><br>"
+                f"Pick an airport, the current time and an hour 3–12 h ahead, then press <b>Check</b>. "
+                f"Or start with a demo case.</div></div>", unsafe_allow_html=True)
 else:
     v = R.view_model(resp)
     if v["kind"] == "ok":
@@ -248,7 +315,7 @@ else:
             st.markdown(f"<div class='banner'>⚠ {escape(v['banner'])}</div>", unsafe_allow_html=True)
         st.markdown(ok_card(v), unsafe_allow_html=True)
     elif v["kind"] == "refused":
-        st.markdown(f"<div class='refused'><h4>{escape(v['title'])}</h4>{escape(v['message'])}</div>",
+        st.markdown(f"<div class='refused'><h4>⏸ {escape(v['title'])}</h4>{escape(v['message'])}</div>",
                     unsafe_allow_html=True)
     else:
         st.markdown(f"<div class='errbox'><b>{R.ERROR_HEADLINE}</b>"

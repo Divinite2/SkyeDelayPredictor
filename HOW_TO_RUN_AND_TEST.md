@@ -14,7 +14,7 @@ The first start takes a few minutes while it installs packages. Then your browse
 
 ## 3. Test it (about 6 clicks)
 
-### A. Demo cases (top drop-down "Demo cases" → pick one → press Check)
+### A. Demo cases (drop-down "Demo cases" at the top of the input panel → pick one → press Check)
 | Pick | You should see |
 |---|---|
 | **True RED…** (DFW) | **● RED** · Middle estimate **15–30 min** · Bad case **more than 60 min (33%)** · confidence **HIGH** · WHY lists the evening hour, an earlier thunderstorm (with its date) and rain |
@@ -29,11 +29,13 @@ The first start takes a few minutes while it installs packages. Then your browse
 3. For dates where severe delays really happened, open **`reports/severe_delay_dates.md`**. Each row says which "Now" to set. It also lists misses.
 
 ### C. Things to check on every result card
-- [ ] A colour badge with the word (RED / AMBER / GREEN)
-- [ ] **LIKELY DELAY** with a middle estimate and a bad case
-- [ ] Four percentage bars, with **> 45 min** marked "severe"
-- [ ] Capacity line plus a grey note explaining why no range is shown
-- [ ] WHY times are before "now". Older readings show their date.
+- [ ] Top band tinted in the risk colour, with a badge (● RED / ▲ AMBER / ■ GREEN), a one-line headline, and a CONFIDENCE pill on the right
+- [ ] Four tiles: **Severe delay (> 45 min)**, **Middle estimate**, **Bad case**, **Arrival capacity**
+- [ ] Four percentage bars, with **> 45 min** marked "severe" in the risk colour
+- [ ] Grey ⓘ note under the tiles explaining why no capacity range is shown
+- [ ] WHY lists factors with ▲ (raises risk) / ▼ (lowers risk). Times are before "now"; older readings show their date.
+- [ ] Blue **SUGGESTED ACTION** box
+- [ ] **Details & method** (click to open) shows the rule, the method and the UTC request
 - [ ] The footer says **"Back end: real · answered in … s"**
 
 ### D. Refusal in test mode

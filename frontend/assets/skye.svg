@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Skye, the forecaster mascot">
+  <!-- sky disc -->
+  <circle cx="64" cy="64" r="62" fill="#e3f0fc"/>
+  <!-- little cloud -->
+  <g fill="#ffffff">
+    <circle cx="28" cy="92" r="9"/><circle cx="40" cy="88" r="12"/><circle cx="52" cy="93" r="8"/>
+    <rect x="22" y="92" width="34" height="9" rx="4.5"/>
+  </g>
+  <!-- tail fin -->
+  <path d="M96 40 L110 22 Q114 20 114 26 L108 54 Z" fill="#1f5fa8"/>
+  <!-- back wing -->
+  <path d="M70 52 L92 30 Q97 27 97 33 L86 58 Z" fill="#174a85"/>
+  <!-- body -->
+  <ellipse cx="68" cy="64" rx="46" ry="22" fill="#ffffff" stroke="#1f5fa8" stroke-width="4"/>
+  <!-- nose cap -->
+  <path d="M24 56 Q18 64 24 72 L30 72 Q27 64 30 56 Z" fill="#1f5fa8"/>
+  <!-- front wing -->
+  <path d="M62 72 L86 100 Q90 104 94 99 L84 70 Z" fill="#1f5fa8"/>
+  <!-- traffic-light windows: our three risk colours -->
+  <circle cx="80" cy="58" r="3.6" fill="#2e7d32"/>
+  <circle cx="90" cy="58" r="3.6" fill="#e0a100"/>
+  <circle cx="100" cy="58" r="3.6" fill="#c62828"/>
+  <!-- face -->
+  <circle cx="44" cy="60" r="4" fill="#262b33"/>
+  <circle cx="58" cy="60" r="4" fill="#262b33"/>
+  <circle cx="45.3" cy="58.6" r="1.3" fill="#ffffff"/>
+  <circle cx="59.3" cy="58.6" r="1.3" fill="#ffffff"/>
+  <ellipse cx="38" cy="68" rx="4" ry="2.4" fill="#f7a8b8"/>
+  <ellipse cx="64" cy="68" rx="4" ry="2.4" fill="#f7a8b8"/>
+  <path d="M46 68 Q51 73 56 68" fill="none" stroke="#262b33" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

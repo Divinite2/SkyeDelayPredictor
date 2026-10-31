@@ -100,3 +100,4 @@ Every deviation from the project documents (01–06) is recorded here: what, why
 | L-024 | Severe-delay date list (scripts/list_severe_dates.py) added to run_all; includes misses for honesty |
 | L-025 | Open: updated brief's wind-direction file (challenge5_hourly_weather_ATL_DFW.csv) never received; top backlog item in HANDOVER.md §9 |
 
+| L-026 | UI v1.2 refresh (front end only, contract unchanged): Skye mascot (frontend/assets/skye.svg), risk-tinted result header with plain headline, colour-coded confidence pill, 4 headline tiles, WHY ▲/▼ arrows, blue suggested-action box, rule/method/UTC moved into collapsible "Details & method". Colours map the back end's level only (render.LEVEL_STYLE / CONFIDENCE_STYLE); no front-end thresholds. Screenshots: reports/figures/ui_v12_real_*.png |

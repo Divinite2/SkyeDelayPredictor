@@ -63,6 +63,26 @@ def test_ok_card_marks_severe_45():
     assert [r["severe"] for r in rows] == [False, False, True, False]
 
 
+def test_level_style_follows_backend_level_only():
+    """UI v1.2: colour/headline come from the back end's risk_level; no thresholds in the front end."""
+    for lvl in ("RED", "AMBER", "GREEN"):
+        v = R.view_model({**RED, "risk_level": lvl})
+        assert v["level_style"] is R.LEVEL_STYLE[lvl]
+    icons = {s["icon"] for s in R.LEVEL_STYLE.values()}
+    assert len(icons) == 3                       # shape differs, not colour alone
+    v = R.view_model(RED)
+    assert v["confidence_style"] is R.CONFIDENCE_STYLE["MEDIUM"]
+    assert v["severe_label"] == "> 45 min" and v["severe_text"] == "38%"
+    assert v["airport"] == "ATL (KATL)"
+
+
+def test_driver_arrows():
+    lines = R.driver_lines("ATL", RED["drivers"], RED["request"]["target_hour_utc"])
+    assert [d["arrow"] for d in lines] == ["▲", "▲", "▲"]
+    down = R.driver_lines("ATL", [{**RED["drivers"][0], "effect": "decreases"}])
+    assert down[0]["arrow"] == "▼"
+
+
 def test_delay_estimate_shown_verbatim():
     v = R.view_model(RED)
     e = v["delay_estimate"]
