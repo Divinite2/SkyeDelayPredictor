@@ -2,7 +2,9 @@
 
 **Your role:** you're the **integration and testing expert**. You check other people's work independently, connect the back end to the front end, and prepare the submission. The back-end expert is now **on call only**.
 
-**Order:** **T-0 first** (check the back end exactly as delivered) → **B3.10** (one small demo-case change) → report → **J-1** once the lead has approved F-3.
+**Order (updated):** **T-0 first** (check the back end exactly as delivered) → **B3.10** (one small demo-case change) → **F-3b** (two front-end fixes, reassigned to you; see §3b) → report → **J-1**.
+
+**Start from the latest zip (tag `f3-merged`)**, which contains the front end's F-3 work. If you already started T-0 on `b3-api`, carry your work over (copy `scripts/` and your B3.10 change into the new folder) and re-run `pytest`.
 
 > **Why T-0 comes before B3.10:** you're checking someone else's work. Do it **before** you change anything, so your checks are of the untouched code.
 
@@ -12,11 +14,11 @@
 | You MAY | You may NOT |
 |---|---|
 | Write glue: `scripts/`, README run steps, setup scripts | Change the model, features, thresholds, `predict()` logic or tests written by others |
-| **B3.10 only:** edit the **calm-case selection** inside `build_demo_cases()` in `run_all.py` | Edit `contract/` or `config/` (joint pull request plus lead only) |
+| **B3.10 only:** edit the **calm-case selection** inside `build_demo_cases()` in `run_all.py` · **F-3b only:** edit `frontend/demo_cases.py`, the capacity block in `frontend/app.py`/`render.py`, and their tests | Edit `contract/` or `config/` (joint pull request plus lead only) |
 | Log every change in `reports/decisions_log.md` (prefix **I-**, e.g. I-001) | Re-tune anything, or run anything on the test set to "improve" a number |
 | Report bugs to their owner through the lead | Fix back-end or front-end bugs yourself, unless the lead says so in writing |
 
-**Independence safeguard:** because you choose the new calm demo case **and** test the demo cases, **the lead reviews B3.10 personally**. Your own tests of the calm case don't count as independent.
+**Independence safeguard:** because you change the calm demo case and the front-end presets **and** test them, **the lead reviews B3.10 and F-3b personally**. Your own tests of the calm case don't count as independent.
 
 ---
 
@@ -86,23 +88,35 @@ Log it as **I-001** in `reports/decisions_log.md`: the rule used, the case chose
 
 ---
 
-## 4. Report to the lead (T-0 + B3.10)
+## 3b. F-3b: two front-end fixes (reassigned to you; details in `docs/15_F3_Review_and_F3b_Fixes.md` §2)
+| # | Fix | Pass |
+|---|---|---|
+| F3b.1 | `frontend/demo_cases.py` reads **`reports/demo_cases.json`** (`cases[]`: `id`, `label`, `airport`, `now_utc`, `target_hour_utc`) instead of `demo_cases.md` | Picker shows exactly the **5 labels from the JSON**, verbatim, in file order. **Remove the auto-generated refusal presets** (the JSON already has `too_soon` and `too_far`). No hard-coded ids. |
+| F3b.2 | Fallback | JSON missing or invalid → picker hidden, grey note "Demo cases not available", manual inputs still work. A labelled sample JSON fixture is allowed in **mock** mode only. |
+| F3b.3 | Capacity note visible (F3.7) | When `index_low`/`index_high` are null and `aar_note` exists, show `aar_note` as **grey text under the capacity line** (not only a tooltip). Text from the response. |
+| F3b.4 | Tests | Rewrite `tests/test_demo_cases.py` for JSON (parse, missing, invalid, labels verbatim, no duplicates) plus one render test for F3b.3. All tests pass (≥ 123). |
+| F3b.5 | Screenshots, `BACKEND=real` | `ui_f3b_picker.png` (5 labels) · `ui_f3b_true_red.png` (capacity note visible) |
+
+**Do F-3b after B3.10**, so the picker shows the new calm case. Log the changes as I-002 onward. Don't touch `contract/`, `config/`, `backend/` or the display rules.
+
+## 4. Report to the lead (T-0 + B3.10 + F-3b)
 Upload **the report** and **a zip of your whole `AutonomousSGHack` folder** (you can leave out `.venv`, `data/processed` and `models/`).
 ```
-CHECKPOINT: T-0 + B3.10
+CHECKPOINT: T-0 + B3.10 + F-3b
 BASE: tag b3-api (commit id)
 ENVIRONMENT: OS, Python, test count
 T-0 RESULTS: T0.1–T0.10 ✅/❌ each, with numbers (thresholds you computed, smoke table)
+F-3b: F3b.1–F3b.5 ✅/❌, screenshot names
 B3.10: case chosen (airport, local time, P(>45), confidence, outcome), number of candidates, fallback used?
 GLUE FILES: scripts/... 
 ISSUES FOR OWNERS: ...
 DEVIATIONS: ...
 ```
-The lead reviews B3.10 personally, then tags `t0-check` and `b3-10`.
+The lead reviews B3.10 and F-3b personally, then tags `t0-check`, `b3-10` and `f3-ready`.
 
 ---
 
-## 5. Then J-1 (only after the lead approves F-3)
+## 5. Then J-1 (only after the lead approves T-0, B3.10 and F-3b)
 Follow `11_J1_Integration_Instructions.md` in full, with these expected results:
 - true_red → **RED** · calm → **GREEN, HIGH/MEDIUM** · miss → **GREEN, LOW** · too_soon / too_far → **refused**
 - capacity line: **no range**, grey note visible (F3.7)

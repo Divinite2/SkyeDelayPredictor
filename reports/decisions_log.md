@@ -80,4 +80,4 @@ Every deviation from the project documents (01–06) is recorded here: what, why
 |---|---|
 | L-018 | Front end's schema change (request fields nullable on refused/error only) accepted retroactively. It matches the v1.0 clarification and back-end contract tests pass. |
 | L-019 | Presets must read `reports/demo_cases.json` with verbatim labels and no extra auto-refusals (F-3b). The capacity note must be visible (F3.7). `f3-ready` only after F-3b. |
-
+| L-020 | F-3b reassigned to the integration and testing expert, with narrow permissions (presets reader, capacity note, their tests). The lead reviews it personally (independence). |

@@ -33,7 +33,7 @@ The front end loosened `schema.json` so **request fields may be null on refused/
 
 ---
 
-## 2. F-3b: front end (two small fixes, then the front end is done until F-2)
+## 2. F-3b: **REASSIGNED to the integration and testing expert** (see `docs/14` §3b). The front end is done until F-2.
 
 | # | Fix | Pass condition |
 |---|---|---|

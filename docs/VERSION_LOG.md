@@ -11,6 +11,6 @@
 | `b3-api` | Done | `predict()`, risk rules (RED ≥ 0.172, AMBER ≥ 0.117, colour from P(>45) only), drivers, simulated flights, contract test on real output, demo cases. Lead re-ran: 112 passed; demo calls 0.13–0.22 s. | Yes (L-014 to L-017) |
 | `b3-10` | Pending | Calm demo case swap, **reassigned to the integration & testing expert** (lead reviews personally) | |
 | `f3-merged` | Done | F-3 merged (adapter, pass-through, cache, presets, blue button, F-2 drafts in story/). 123 tests pass. | Partial: 2 fixes needed |
-| `f3-ready` | Pending | After F-3b (presets from JSON, visible capacity note) | |
+| `f3-ready` | Pending | After F-3b (presets from JSON, visible capacity note), **reassigned to the integration expert**; lead reviews personally | |
 | `v1-submitted` | Pending | Code freeze starts | |
 | `f2-story` | Pending (last, during freeze) | Story and pitch | |
