@@ -1,0 +1,23 @@
+# SHARED CONFIG - change only by joint pull request (back end + front end). See docs/04_Data_Contract.md
+schema_version: "1.0"
+lead_time_hours: {min: 3, max: 12}
+report_lead_times: [3, 6, 9, 12]
+delay_thresholds_min: [15, 30, 45, 60]
+severe_threshold_min: 45
+delay_bands_min: [15, 30, 45, 60]
+data_range_utc: {start: "2023-01-01T00:00:00Z", end: "2025-07-31T23:00:00Z"}
+splits:
+  train: {start: "2023-01-01", end: "2024-12-31"}
+  validation: {start: "2025-01-01", end: "2025-03-31"}
+  test: {start: "2025-04-01", end: "2025-07-31"}
+airports:
+  ATL: {icao: "KATL", tz: "America/New_York", runway_heading_deg: 80}
+  DFW: {icao: "KDFW", tz: "America/Chicago", runway_heading_deg: 180}
+risk_rules:            # STARTING values; tune on VALIDATION only, log in reports/decisions_log.md
+  red:   {p_gt45_min: 0.30, capacity_index_max: 0.60}
+  amber: {p_gt45_min: 0.15, capacity_index_max: 0.80}
+confidence_rules:
+  high: {max_lead_h: 6, max_obs_age_h: 1}
+  low:  {min_lead_h: 10, min_obs_age_h: 3}
+flight_list: {rows_shown: 5}
+nominal_arrival_rate: {ATL: null, DFW: null}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "status": "error",
+  "request": {
+    "airport": "ATL",
+    "target_hour_utc": "2025-06-14T22:00:00Z",
+    "now_utc": "2025-06-14T16:00:00Z",
+    "lead_time_h": 6
+  },
+  "refusal": null,
+  "error": {
+    "code": "INTERNAL",
+    "message": "Model file not found: models/delayband.txt"
+  }
+}
