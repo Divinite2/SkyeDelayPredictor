@@ -143,3 +143,16 @@ def test_target_options_never_skip_an_hour_on_dst():
     opts = R.target_options(now)
     assert [h for h, _ in opts] == list(range(3, 13))
     assert all((t - now).total_seconds() == h * 3600 for h, t in opts)
+
+
+def test_risk_scale_positions_and_text_from_backend():
+    """v1.2: marker scale uses only risk_context numbers; text explains, never re-decides."""
+    sc = R.view_model(RED)["risk_scale"]
+    ctx = RED["risk_context"]
+    assert sc["amber"] == round(ctx["amber_min"] / ctx["scale_max"] * 100, 1)
+    assert sc["red"] == round(ctx["red_min"] / ctx["scale_max"] * 100, 1)
+    assert sc["marker"] == 100.0 and sc["beyond"]            # 38% is past the 30% scale end
+    assert sc["justification"] == f"Riskier than {ctx['percentile']}% of hours · " \
+                                  f"{ctx['ratio_to_typical']:.1f}× a typical hour (9%)"
+    assert "RED starts at 17%" in sc["why_colour"]
+    assert R.risk_scale_view(None, 0.2, "RED") is None

@@ -128,6 +128,11 @@ def stage_model(run_test: bool) -> bool:
             or rr["amber"].get("capacity_index_max") is not None:
         sys.exit(f"config/config.yaml risk_rules do not match the validation-tuned values {thr} "
                  "with capacity conditions null (L-011). Update config via a joint PR.")
+    # v1.2 (L-027): the explanation scale must describe the same validation distribution
+    rs_q = {int(k): float(v) for k, v in config()["risk_scale"]["quantiles"].items()}
+    got_q = {k: round(float(np.quantile(vh["p45"].to_numpy(), k / 100)), 3) for k in rs_q}
+    if got_q != rs_q:
+        sys.exit(f"config/config.yaml risk_scale.quantiles do not match validation: {got_q}")
     T = None
     if run_test:
         print("[B2.9] single TEST-set run (tuning frozen)")

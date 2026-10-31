@@ -33,6 +33,7 @@ The first start takes a few minutes while it installs packages. Then your browse
 - [ ] Four tiles: **Severe delay (> 45 min)**, **Middle estimate**, **Bad case**, **Arrival capacity**
 - [ ] Four percentage bars, with **> 45 min** marked "severe" in the risk colour
 - [ ] Grey ⓘ note under the tiles explaining why no capacity range is shown
+- [ ] **WHY THIS COLOUR** scale: green/amber/red zones, a marker for this hour, a "typical" tick, and a line like "Riskier than 99% of hours · 4.3× a typical hour (9%)"
 - [ ] WHY lists factors with ▲ (raises risk) / ▼ (lowers risk). Times are before "now"; older readings show their date.
 - [ ] Blue **SUGGESTED ACTION** box
 - [ ] **Details & method** (click to open) shows the rule, the method and the UTC request
@@ -53,6 +54,6 @@ Tick **Test mode**, type airport **ORD**, press Check → "Airport not in data".
 ## 5. Optional full check (technical)
 ```
 python run_all.py            # rebuild everything from the data (~2 min)
-python -m pytest -q          # 134 passed
+python -m pytest -q          # 150 passed
 python scripts/smoke_real.py # end-to-end check
 ```

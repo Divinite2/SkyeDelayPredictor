@@ -182,6 +182,35 @@ def delay_estimate_lines(est: dict | None) -> dict | None:
             "method": est.get("method")}
 
 
+def risk_scale_view(ctx: dict | None, p45: float | None, level: str) -> dict | None:
+    """v1.2 marker scale + one-line justification. All numbers come from the back end's
+    risk_context; this only turns them into positions (% of the bar) and words."""
+    if not ctx or p45 is None:
+        return None
+    top = ctx["scale_max"]
+
+    def pos(x):
+        return round(max(0.0, min(100.0, x / top * 100)), 1)
+
+    word = {"RED": "red", "AMBER": "amber", "GREEN": "green"}[level]
+    cut = {"RED": f"RED starts at {pct(ctx['red_min'])}",
+           "AMBER": f"AMBER starts at {pct(ctx['amber_min'])}, RED at {pct(ctx['red_min'])}",
+           "GREEN": f"AMBER starts at {pct(ctx['amber_min'])}"}[level]
+    return {
+        "marker": pos(p45), "marker_text": pct(p45),
+        # keep the label inside the bar near either end (-100% = label left of the line)
+        "label_shift": -100 if pos(p45) > 85 else (0 if pos(p45) < 15 else -50),
+        "amber": pos(ctx["amber_min"]), "red": pos(ctx["red_min"]),
+        "typical": pos(ctx["typical_p"]), "typical_text": pct(ctx["typical_p"]),
+        "beyond": p45 > top, "top_text": pct(top),
+        "justification": (f"Riskier than {ctx['percentile']}% of hours · "
+                          f"{ctx['ratio_to_typical']:.1f}× a typical hour ({pct(ctx['typical_p'])})"),
+        "why_colour": f"Shown {word} because {cut}. Severe delays are rare, so colours compare an hour "
+                      f"with other hours rather than with 50%.",
+        "basis": ctx["basis"],
+    }
+
+
 def period_banner(resp: dict) -> str | None:
     p = resp.get("data_period")
     return None if p in (None, "TEST") else PERIOD_WARNING.format(period=p)
@@ -230,6 +259,8 @@ def view_model(resp: dict) -> dict:
         "confidence_level": resp["confidence"]["level"],
         "confidence_reasons": " · ".join(resp["confidence"]["reasons"]),
         "delay_estimate": delay_estimate_lines(resp.get("delay_estimate")),
+        "risk_scale": risk_scale_view(resp.get("risk_context"), resp["hour_delay_risk"].get(f"p_gt{sev}"),
+                                      resp["risk_level"]),
         "thresholds": [f">{k}" for k in load_config()["delay_thresholds_min"]],
         "banner": period_banner(resp),
         "footer": f"Model {resp['model_version']} · generated {resp['generated_at_utc']}",

@@ -80,6 +80,17 @@ details.more {padding:0.55rem 1.2rem 0.8rem; border-top:1px solid #eceef1; font-
 details.more summary {cursor:pointer; font-weight:600; color:#3c424b;}
 details.more div {margin-top:0.3rem;}
 .foot {margin-top:0.45rem;}
+.scale {padding:0.1rem 1.2rem 0.9rem;}
+.scale .bar {position:relative; display:flex; height:0.7rem; border-radius:99px; overflow:visible; margin:1.5rem 0 1.3rem;}
+.scale .z {height:100%;} .scale .z.g {background:#a5d6a7; border-radius:99px 0 0 99px;}
+.scale .z.a {background:#ffe08a;} .scale .z.r {background:#ef9a9a; border-radius:0 99px 99px 0;}
+.scale .mk {position:absolute; top:-1.45rem; font-size:0.75rem; font-weight:800;
+            white-space:nowrap; text-align:center; line-height:1;}
+.scale .ln {position:absolute; top:-0.3rem; height:1.25rem; width:3px; margin-left:-1.5px; border-radius:2px;}
+.scale .ty {position:absolute; top:1.05rem; transform:translateX(-50%); font-size:0.68rem; color:#5f6670; white-space:nowrap;}
+.scale .ty::before {content:''; display:block; width:1px; height:0.35rem; background:#5f6670; margin:-0.25rem auto 0.05rem;}
+.scale .cut {position:absolute; top:0; bottom:0; width:2px; background:#fff;}
+.scale .just {font-size:0.88rem; color:#262b33;} .scale .just b {font-weight:700;}
 /* other states */
 .empty {display:flex; align-items:center; gap:1rem; padding:1.2rem; border:1px dashed #c9d6e6;
         border-radius:14px; background:#f6f9fd; color:#3c424b;}
@@ -258,6 +269,24 @@ def ok_card(v: dict) -> str:
         tiles += _tile("Arrival capacity", escape(c["text"].split(" ")[0]),
                        "of scheduled arrivals on time")
 
+    sc = v.get("risk_scale")
+    scale = ""
+    if sc:
+        scale = (f"<div class='scale'><div class='sec-title'>WHY THIS COLOUR · severe-delay risk vs other hours</div>"
+                 f"<div class='bar'>"
+                 f"<div class='z g' style='width:{sc['amber']}%'></div>"
+                 f"<div class='z a' style='width:{sc['red'] - sc['amber']}%'></div>"
+                 f"<div class='z r' style='width:{100 - sc['red']}%'></div>"
+                 f"<span class='cut' style='left:{sc['amber']}%'></span><span class='cut' style='left:{sc['red']}%'></span>"
+                 f"<span class='ty' style='left:{sc['typical']}%'>typical {sc['typical_text']}</span>"
+                 f"<span class='mk' style='left:{sc['marker']}%; color:{col}; transform:translateX({sc['label_shift']}%)'>"
+                 f"this hour {sc['marker_text']}{' ▸' if sc['beyond'] else ''}</span>"
+                 f"<span class='ln' style='left:{sc['marker']}%; background:{col}'></span>"
+                 f"</div>"
+                 f"<div class='just'><b>{escape(sc['justification'])}</b>. "
+                 f"<span class='muted'>{escape(sc['why_colour'])} Scale: {escape(sc['basis'])}; "
+                 f"0–{sc['top_text']}.</span></div></div>")
+
     rows = "".join(
         f"<div class='row{' severe' if r['severe'] else ''}'><span class='lab'>{r['label']}</span>"
         f"<div class='track'><div class='fill' style='width:{r['width']:.1f}%"
@@ -299,7 +328,7 @@ def ok_card(v: dict) -> str:
     foot = (f"<div class='muted foot'>Back end: {MODE}"
             + (f" · answered in {elapsed:.2f} s" if elapsed is not None else "")
             + (" (demo data, not a forecast)" if MODE == "mock" else "") + "</div>")
-    return (f"<div class='card'>{hero}<div class='tiles'>{tiles}</div>{cap_note}"
+    return (f"<div class='card'>{hero}<div class='tiles'>{tiles}</div>{cap_note}{scale}"
             f"<div class='cols'>{risk}{why}</div>{do}{more}</div>{foot}")
 
 

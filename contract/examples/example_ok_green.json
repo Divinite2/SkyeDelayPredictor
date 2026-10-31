@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "status": "ok",
   "request": {
     "airport": "DFW",
@@ -20,6 +20,15 @@
     "bad_case_prob": 0.182,
     "bad_case_level": 0.25,
     "method": "Middle estimate = median delay band (half of departures shorter). Bad case = largest delay with at least a 25% chance."
+  },
+  "risk_context": {
+    "typical_p": 0.094,
+    "ratio_to_typical": 0.6,
+    "percentile": 5,
+    "amber_min": 0.117,
+    "red_min": 0.172,
+    "scale_max": 0.3,
+    "basis": "Jan–Mar 2025 validation hours, all lead times"
   },
   "capacity": {
     "index": 0.91,

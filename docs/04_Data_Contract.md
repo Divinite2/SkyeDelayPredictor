@@ -1,3 +1,5 @@
+> **v1.2 (L-027):** new required `risk_context` on `ok` responses: `{typical_p, ratio_to_typical, percentile, amber_min, red_min, scale_max, basis}`; config adds `risk_scale`. `contract/schema.json` is authoritative.
+
 # 04 · Data Contract: The Rules Both Back End and Front End Must Follow
 
 > **CURRENT VERSION: v1.1** (see `docs/16_Change_List_v1.1.md`). Changes since v1.0: **`flights` removed** (no simulated flight list). **New required `delay_estimate`** on `ok` responses: `{typical_text, bad_case_text, bad_case_prob, bad_case_level, method}`. `config.yaml`: `flight_list` replaced by `delay_estimate: {typical_prob, bad_case_prob}`. Where this document still mentions flights or SIMULATED rows, those parts are historical. **`contract/schema.json` is authoritative.**

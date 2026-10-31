@@ -2,6 +2,7 @@
 
 **Who this is for:** a new team that has never seen this project. Read this file first. It explains what the product does, how it's built, how to run it, how to change it safely, and what's unfinished.
 **Version at handover:** v1.1 (git tag `v1.1-handover`) · data contract v1.1 · 134 automated tests passing.
+**Since handover (v1.2):** UI refresh with the Skye mascot (tag `v1.2-ui`); contract v1.2 adds `risk_context` and a "WHY THIS COLOUR" marker scale (L-026, L-027). **150 tests passing.**
 
 ---
 
@@ -37,7 +38,7 @@ The first start installs Python packages (internet needed once). The browser the
 python3.11 -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python run_all.py                 # rebuild everything from the raw CSV (~2 min)
-python -m pytest -q               # expect 134 passed
+python -m pytest -q               # expect 150 passed
 python scripts/smoke_real.py      # real predict() on the demo cases + refusal cases
 BACKEND=real streamlit run frontend/app.py      # Windows: set BACKEND=real & streamlit run frontend\app.py
 ```
@@ -60,7 +61,7 @@ data/raw/Flight_Data_With_Weather_Final.csv   (provided; never edited)
 │   uses: features.Context.hour_features · rules.py (colour + DO) · drivers.py (WHY)    │
 │         delay_estimate.py (likely-delay range) · confidence rules (config)            │
 └──────────────────────────────────────┬───────────────────────────────────┘
-                                       │ dict that follows contract/schema.json (v1.1)
+                                       │ dict that follows contract/schema.json (v1.2)
 ┌──────────────────────────────────────▼───────────────────────────────────┐
 │ FRONT END (frontend/, Streamlit)                                          │
 │ backend_adapter.py picks real/mock and never crashes · app.py draws the page │
@@ -81,7 +82,7 @@ data/raw/Flight_Data_With_Weather_Final.csv   (provided; never edited)
 | `frontend/` | Streamlit dashboard |
 | `run_all.py` | One command: data → features → baselines → models → evaluation → test run → demo cases → severe-delay date list |
 | `scripts/` | `smoke_real.py` (end-to-end check) · `list_severe_dates.py` · `setup_and_run.sh/.bat` (full rebuild + tests + run) |
-| `tests/` | 134 tests: contract, leakage, monotonicity, wind maths, rendering, adapter, demo cases |
+| `tests/` | 150 tests: contract, leakage, monotonicity, wind maths, rendering, adapter, demo cases |
 | `models/` | Trained models (rebuilt by `run_all.py`; shipped in the package for convenience) |
 | `reports/` | Evidence: `validation_report.md`, `metrics.md`, `failure_cases.md`, `demo_cases.json/.md`, `severe_delay_dates.md`, `decisions_log.md`, figures, screenshots |
 | `story/` | Draft pitch material (user story, why 3–12 h, pitch outline, limitations) |
@@ -111,6 +112,7 @@ data/raw/Flight_Data_With_Weather_Final.csv   (provided; never edited)
   - Accuracy is almost flat from 3 h to 12 h. About 58% of the signal is season, time of day and traffic; storm features contributed ~0% (too few storm hours in the sample).
   - Thresholds come from winter validation data, so **in summer about 1 hour in 4 is RED**.
   - Full tables: `reports/metrics.md`. Failure cases: `reports/failure_cases.md` (e.g. ATL 28 Jun 2025 08:00, a miss the morning after a storm, last reading 7 h old; the tool *did* say LOW confidence).
+- **Risk context (v1.2, `backend/risk_context.py`):** places P(>45) on the validation distribution the cut-offs come from: typical hour = median 9.4%, RED (17.2%) = 90th percentile, AMBER (11.7%) = 70th. Gives the "riskier than X% of hours · N× a typical hour" line. Explains the colour, never changes it.
 - **Likely delay (v1.1, `backend/delay_estimate.py`):** derived from the 4 probabilities, no extra model.
   - Middle estimate = the first k where P(> k) < 0.5 gives the band below k.
   - Bad case = the largest k with P(> k) ≥ 0.25.
@@ -120,7 +122,7 @@ data/raw/Flight_Data_With_Weather_Final.csv   (provided; never edited)
 
 ## 7. How to change things (recipes)
 
-> **Before any change:** run `python -m pytest -q` (expect 134 passed). After it: run it again, plus `python scripts/smoke_real.py`. Log every decision in `reports/decisions_log.md`.
+> **Before any change:** run `python -m pytest -q` (expect 150 passed). After it: run it again, plus `python scripts/smoke_real.py`. Log every decision in `reports/decisions_log.md`.
 
 ### 7.1 Change a threshold or setting (no code)
 Edit `config/config.yaml`:

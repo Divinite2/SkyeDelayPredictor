@@ -21,6 +21,7 @@ from backend.common import config, path
 from backend.features import FEATURES, MAX_OBS_AGE_H
 from backend.rules import recommendation
 from backend.delay_estimate import delay_estimate
+from backend.risk_context import risk_context
 
 SCHEMA_VERSION = config()["schema_version"]
 PKEYS = ["p_gt15", "p_gt30", "p_gt45", "p_gt60"]
@@ -177,7 +178,8 @@ def _predict(req, airport, target_hour_utc, now_utc):
         "risk_level": level, "hour_delay_risk": risk, "capacity": capacity, "drivers": why,
         "recommendation": rec, "confidence": {"level": conf, "reasons": reasons},
         "weather_basis": {"last_obs_utc": _fmt(last_obs), "obs_age_h": age},
-        "delay_estimate": estimate, "data_period": period, "model_version": card["model_version"],
+        "delay_estimate": estimate, "risk_context": risk_context(risk["p_gt45"]),
+        "data_period": period, "model_version": card["model_version"],
         "generated_at_utc": _fmt(now),  # = forecast issue time; keeps responses deterministic (D-027)
         "refusal": None, "error": None,
     }

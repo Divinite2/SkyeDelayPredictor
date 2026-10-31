@@ -112,6 +112,17 @@ def test_response(case, responses):
     from backend.delay_estimate import delay_estimate as _de
     assert r["delay_estimate"] == _de(risk)
     assert "flights" not in r
+    # risk context (v1.2): explains the colour on the same validation scale, never contradicts it
+    from backend.risk_context import risk_context as _rc
+    ctx = r["risk_context"]
+    assert ctx == _rc(risk["p_gt45"])
+    assert ctx["amber_min"] < ctx["red_min"]
+    if r["risk_level"] == "RED":
+        assert ctx["percentile"] >= 89 and ctx["ratio_to_typical"] > 1
+    elif r["risk_level"] == "AMBER":
+        assert 69 <= ctx["percentile"] <= 91
+    else:
+        assert ctx["percentile"] <= 71
     # data period
     exp_period = ("TRAIN" if req["target_hour_utc"] < "2025-01-01" else
                   "VALIDATION" if req["target_hour_utc"] < "2025-04-01" else "TEST")
