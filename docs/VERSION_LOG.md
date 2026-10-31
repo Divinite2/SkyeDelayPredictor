@@ -9,7 +9,7 @@
 | `b2-model` | Done | Features, leakage tests, baselines, LightGBM delay-band and capacity models, metrics (one test run), failure cases. Lead re-ran: metrics identical; 69 passed, 1 skipped. | Yes (L-007 to L-013) |
 | `t0-check` | Pending | Testing expert's independent check of B-2 | |
 | `b3-api` | Done | `predict()`, risk rules (RED ≥ 0.172, AMBER ≥ 0.117, colour from P(>45) only), drivers, simulated flights, contract test on real output, demo cases. Lead re-ran: 112 passed; demo calls 0.13–0.22 s. | Yes (L-014 to L-017) |
-| `b3-10` | Pending | Calm demo case swap | |
+| `b3-10` | Pending | Calm demo case swap, **reassigned to the integration & testing expert** (lead reviews personally) | |
 | `f3-ready` | Pending | | |
 | `v1-submitted` | Pending | Code freeze starts | |
 | `f2-story` | Pending (last, during freeze) | Story and pitch | |
