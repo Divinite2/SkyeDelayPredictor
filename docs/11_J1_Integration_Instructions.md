@@ -14,7 +14,7 @@
 | # | Condition | How to check |
 |---|---|---|
 | S1 | Back end **B-3 approved** by the lead | Tag `b3-api` exists (`git tag`), or the lead says so in writing |
-| S2 | Front end **F-3 approved** by the lead | Tag `f3-ready` exists |
+| S2 | Front end **F-3 + F-3b approved** by the lead | Tag `f3-ready` exists (not just `f3-merged`) |
 | S3 | `reports/demo_cases.json` has `version` ≠ `"placeholder"` | Open the file |
 | S4 | You have the lead's **latest merged repo** (zip/bundle, or `main` from GitHub `AutonomousSGHack`) | `git log --oneline -1` matches what the lead announced |
 

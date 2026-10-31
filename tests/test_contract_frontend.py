@@ -59,3 +59,16 @@ def test_mock_is_deterministic():
     a = mock_backend.predict("ATL", "2025-06-14T22:00:00Z", NOW)
     b = mock_backend.predict("ATL", "2025-06-14T22:00:00Z", NOW)
     assert a == b
+
+
+def test_contract_v1_clarifications():
+    """04_Data_Contract (1): request fields nullable on refused/error only; triggered_by a string."""
+    refused = json.loads((ROOT / "contract/examples/example_refused_short.json").read_text())
+    refused["request"] = {"airport": None, "target_hour_utc": None, "now_utc": None, "lead_time_h": None}
+    assert validate_response(refused) is None
+    ok = json.loads((ROOT / "contract/examples/example_ok_green.json").read_text())
+    assert ok["recommendation"]["triggered_by"] == "no RED or AMBER condition met"
+    bad = json.loads(json.dumps(ok)); bad["request"]["now_utc"] = None
+    assert validate_response(bad) is not None
+    bad = json.loads(json.dumps(ok)); bad["recommendation"]["triggered_by"] = None
+    assert validate_response(bad) is not None

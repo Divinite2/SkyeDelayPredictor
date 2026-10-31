@@ -75,3 +75,9 @@ Every deviation from the project documents (01–06) is recorded here: what, why
 | L-016 | `basis` key and `joblib` pin approved. Contract doc §2 updated. |
 | L-017 | Front-end presets must list whatever `cases` exist (no hard-coded ids) |
 
+## Lead decisions at F-3 review (f3-merged). Details in docs/15_F3_Review_and_F3b_Fixes.md
+| ID | Decision |
+|---|---|
+| L-018 | Front end's schema change (request fields nullable on refused/error only) accepted retroactively. It matches the v1.0 clarification and back-end contract tests pass. |
+| L-019 | Presets must read `reports/demo_cases.json` with verbatim labels and no extra auto-refusals (F-3b). The capacity note must be visible (F3.7). `f3-ready` only after F-3b. |
+

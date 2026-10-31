@@ -8,8 +8,19 @@ It **only displays** what `predict()` returns (see `contract/schema.json`).
 pip install -r requirements.txt
 streamlit run frontend/app.py            # BACKEND=mock (default)
 BACKEND=real streamlit run frontend/app.py   # once backend/api.py exists
-python -m pytest -q                      # front-end tests
+python -m pytest -q                      # front-end tests (48)
 ```
+Run from the project root so `.streamlit/config.toml` (neutral theme) is picked up.
+
+## Back end switch
+- `BACKEND=mock` (default): `frontend/mock_backend.py`, which re-stamps example times to the request.
+- `BACKEND=real`: `backend.api.predict`, loaded once (`@st.cache_resource`). Responses are shown **untouched**.
+  If the import fails, the page shows the error card instead of crashing.
+
+## Demo cases picker
+Filled from `reports/demo_cases.md` (back end, B3.8): a markdown table with `airport`, `now…` and
+`target…` columns (UTC, `Z`). Three refusal presets (2 h, 13 h, unknown airport) are added from the
+first case. In mock mode, if that file is missing, `tests/fixtures/demo_cases_sample.md` is used.
 Opens at http://localhost:8501. No internet needed.
 
 ## Layout
@@ -20,6 +31,9 @@ contract/examples/*.json      six example responses
 frontend/app.py               the page
 frontend/render.py            pure formatting functions (tested)
 frontend/mock_backend.py      stand-in for backend.api.predict
+frontend/backend_adapter.py   mock/real switch, safe import, pass-through
+frontend/demo_cases.py        demo preset parser
+.streamlit/config.toml        neutral theme (Check button not red)
 tests/                        schema + render tests, broken fixture
 ```
 

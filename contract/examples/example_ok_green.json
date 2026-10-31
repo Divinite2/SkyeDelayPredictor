@@ -22,7 +22,7 @@
   "recommendation": {
     "rule_id": "GREEN-1",
     "text": "No pre-emptive action indicated. Continue normal monitoring.",
-    "triggered_by": "p_gt45 < 0.15 and capacity_index >= 0.80"
+    "triggered_by": "no RED or AMBER condition met"
   },
   "confidence": {"level": "HIGH", "reasons": ["Lead time 4 h", "Last weather reading 1 h before forecast"]},
   "weather_basis": {"last_obs_utc": "2025-05-20T10:00:00Z", "obs_age_h": 1},

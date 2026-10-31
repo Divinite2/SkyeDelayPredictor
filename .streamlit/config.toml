@@ -1,0 +1,7 @@
+[theme]
+# F3.1: neutral accent. Red is reserved for "high risk" on this screen.
+primaryColor = "#1f5fa8"
+base = "light"
+
+[client]
+toolbarMode = "minimal"

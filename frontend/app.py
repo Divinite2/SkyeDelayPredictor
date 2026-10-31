@@ -14,11 +14,8 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from frontend import render as R  # noqa: E402
-
-if os.getenv("BACKEND", "mock").lower() == "real":
-    from backend.api import predict  # noqa: E402
-else:
-    from frontend.mock_backend import predict  # noqa: E402
+from frontend.backend_adapter import backend_mode, load_predict  # noqa: E402
+from frontend.demo_cases import load_presets  # noqa: E402
 
 CFG = R.load_config()
 DEMO_DATE = date.fromisoformat(os.getenv("DEMO_DATE", "2025-06-14"))   # default in test period
@@ -62,41 +59,95 @@ table.sim td {padding:0.2rem 0.4rem; border-top:1px solid #f0f1f3; font-variant-
 
 st.markdown("#### Airport Capacity & Delay Risk · 3–12 h ahead")
 
-# ---------------- Input bar ----------------
+# ---------------- Back end (loaded once; F3.3 / F3.4) ----------------
+@st.cache_resource(show_spinner="Loading model…")
+def get_predict(mode: str):
+    return load_predict(mode)
+
+
+MODE = backend_mode()
+predict = get_predict(MODE)
+
+# ---------------- Session defaults (widgets are driven by these keys) ----------------
 airports = list(CFG["airports"].keys())
-free_entry = st.session_state.get("free_entry", False)
+icao_map = {v["icao"]: k for k, v in CFG["airports"].items()}
+for k, v in {"free_entry": False, "apt_sel": airports[0], "apt_txt": "ATL",
+             "now_day": DEMO_DATE, "now_hour": DEMO_HOUR, "tgt_lead": 6,
+             "t_day": DEMO_DATE, "t_hour": DEMO_HOUR + 6}.items():
+    st.session_state.setdefault(k, v)
+
+
+def _known(code: str) -> str | None:
+    code = icao_map.get(code, code)
+    return code if code in CFG["airports"] else None
+
+
+# ---------------- Demo presets (F3.5) ----------------
+PRESETS = load_presets()
+if not PRESETS and MODE == "mock":   # until the back end delivers reports/demo_cases.md
+    PRESETS = load_presets(R.ROOT / "tests" / "fixtures" / "demo_cases_sample.md")
+
+
+def _apply_preset():
+    label = st.session_state.get("preset")
+    case = next((c for c in PRESETS if c["label"] == label), None)
+    if not case:
+        return
+    now, tgt = R.parse_utc(case["now_utc"]), R.parse_utc(case["target_hour_utc"])
+    tz_apt = _known(case["airport"]) or airports[0]
+    now_loc, tgt_loc = R.utc_to_local(tz_apt, now), R.utc_to_local(tz_apt, tgt)
+    lead = int((tgt - now).total_seconds() // 3600)
+    lt = CFG["lead_time_hours"]
+    ss = st.session_state
+    ss["now_day"], ss["now_hour"] = now_loc.date(), now_loc.hour
+    if _known(case["airport"]) and lt["min"] <= lead <= lt["max"]:
+        ss["free_entry"], ss["apt_sel"], ss["tgt_lead"] = False, _known(case["airport"]), lead
+    else:  # refusal demos need free entry
+        ss["free_entry"], ss["apt_txt"] = True, case["airport"]
+        ss["t_day"], ss["t_hour"] = tgt_loc.date(), tgt_loc.hour
+    ss.pop("resp", None)
+
+
+if PRESETS:
+    st.selectbox("Demo cases", ["—"] + [c["label"] for c in PRESETS], key="preset",
+                 on_change=_apply_preset, help="Filled from reports/demo_cases.md")
+
+# ---------------- Input bar ----------------
+free_entry = st.session_state["free_entry"]
 c_apt, c_day, c_hr, c_tgt, c_btn = st.columns([1.3, 1.3, 0.9, 2.2, 0.8])
 
 with c_apt:
     if free_entry:
-        airport_in = st.text_input("Airport (IATA/ICAO)", value="ATL").strip().upper()
+        airport_in = st.text_input("Airport (IATA/ICAO)", key="apt_txt").strip().upper()
     else:
-        airport_in = st.selectbox("Airport", airports,
+        airport_in = st.selectbox("Airport", airports, key="apt_sel",
                                   format_func=lambda a: f"{a} ({CFG['airports'][a]['icao']})")
-# Time zone used for the pickers: the chosen airport if known, otherwise the first configured.
-icao_map = {v["icao"]: k for k, v in CFG["airports"].items()}
-tz_airport = icao_map.get(airport_in, airport_in) if icao_map.get(airport_in, airport_in) in CFG["airports"] else airports[0]
+# Time zone for the pickers: the chosen airport if known, otherwise the first configured.
+tz_airport = _known(airport_in) or airports[0]
 
 with c_day:
-    now_day = st.date_input("Now · date (local)", value=DEMO_DATE)
+    now_day = st.date_input("Now · date (local)", key="now_day")
 with c_hr:
-    now_hour = st.selectbox("Now · hour", list(range(24)), index=DEMO_HOUR,
+    now_hour = st.selectbox("Now · hour", list(range(24)), key="now_hour",
                             format_func=lambda h: f"{h:02d}:00")
 now_utc = R.local_to_utc(tz_airport, now_day, now_hour)
 
 with c_tgt:
     if not free_entry:
-        opts = R.target_options(now_utc)
-        _, target_utc = st.selectbox(
-            "Target hour (local)", opts, index=3,
-            format_func=lambda o: f"{R.fmt_local(tz_airport, o[1], with_date=True)}  ·  +{o[0]} h")
+        opts = dict(R.target_options(now_utc))          # lead_h -> target_utc
+        if st.session_state["tgt_lead"] not in opts:
+            st.session_state["tgt_lead"] = min(opts)
+        lead_sel = st.selectbox(
+            "Target hour (local)", list(opts), key="tgt_lead",
+            format_func=lambda h: f"{R.fmt_local(tz_airport, opts[h], with_date=True)}  ·  +{h} h")
+        target_utc = opts[lead_sel]
     else:
         t1, t2 = st.columns(2)
         with t1:
-            t_day = st.date_input("Target · date", value=now_day, key="t_day")
+            t_day = st.date_input("Target · date", key="t_day")
         with t2:
-            t_hour = st.selectbox("Target · hour", list(range(24)), index=now_hour,
-                                  format_func=lambda h: f"{h:02d}:00", key="t_hour")
+            t_hour = st.selectbox("Target · hour", list(range(24)), key="t_hour",
+                                  format_func=lambda h: f"{h:02d}:00")
         target_utc = R.local_to_utc(tz_airport, t_day, t_hour)
 
 now_s, target_s = R.to_utc_str(now_utc), R.to_utc_str(target_utc)
@@ -117,10 +168,11 @@ st.checkbox("Test mode: type any airport and any target hour (to demonstrate ref
             key="free_entry")
 tz_label = R.utc_to_local(tz_airport, now_utc).strftime("%Z")
 st.markdown(f"<div class='utc-note'>Sent to model in UTC — now: {now_s} · target: {target_s} "
-            f"· times above are {tz_airport} local ({tz_label})</div>", unsafe_allow_html=True)
+            f"· times above are {tz_airport} local ({tz_label}) · back end: {MODE}</div>",
+            unsafe_allow_html=True)
 st.divider()
 
-# ---------------- Call (one click -> one predict) ----------------
+# ---------------- Call (one click -> one predict; response shown untouched) ----------------
 if st.session_state.get("pending"):
     with st.spinner("Calculating…"):
         st.session_state["resp"] = predict(*st.session_state.pop("pending"))
