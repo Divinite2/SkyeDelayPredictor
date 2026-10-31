@@ -1,5 +1,8 @@
 # Skye [ATC Weather Risk: 3–12 h delay & capacity forecaster (Autonomous SG 2026 · Airbus Challenge #5)]
 
+<img width="1974" height="1541" alt="image" src="https://github.com/user-attachments/assets/6de55849-c719-4834-9d3d-c10801a66bb5" />
+
+
 A traffic flow controller enters an **airport and an hour**. The tool returns delay risk (>15/30/45/60 min), arrival capacity, why, a suggested action, confidence, and a likely-delay range. Requests under 3 h or over 12 h ahead are refused.
 
 ## Start here
