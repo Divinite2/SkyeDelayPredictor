@@ -99,7 +99,7 @@
 | F3.5 | Demo presets | A small "Demo cases" picker filled from `reports/demo_cases.json` (B3.8), so the pitch needs no typing |
 | F3.6 | Contract tests still green | All tests pass with the merged schema |
 
-### J-1: "Integration and SUBMIT v1", both
+### J-1: "Integration and SUBMIT v1", integration agent with both paths (full instructions: `docs/11_J1_Integration_Instructions.md`)
 | # | Deliverable | Pass condition |
 |---|---|---|
 | J1.1 | `BACKEND=real` end to end | The 3 demo cases plus 2 h (refused), 13 h (refused) and unknown airport, all displayed correctly |
