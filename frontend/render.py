@@ -16,8 +16,6 @@ ROOT = Path(__file__).resolve().parent.parent
 UTC_FMT = "%Y-%m-%dT%H:%M:%SZ"
 DASH = "—"
 
-SIM_NOTE = ("Simulated flights to illustrate a full schedule. Each shows the risk for the "
-            "whole hour, not an individual flight prediction.")
 ERROR_HEADLINE = ("The forecast could not be produced. Do not rely on this tool for this request.")
 PERIOD_WARNING = ("This date is in the model's {period} period, so it isn't a fair test. "
                   "Use Apr–Jul 2025 for honest demos.")
@@ -140,24 +138,32 @@ def capacity_line(cap: dict | None) -> dict | None:
     return {"text": text, "aar": aar, "note": cap.get("aar_note"), "visible_note": visible}
 
 
-def driver_lines(airport: str, drivers: list[dict]) -> list[dict]:
+def driver_lines(airport: str, drivers: list[dict], target_utc: str | None = None) -> list[dict]:
+    """C4c (v1.1): show the date with the time when the observation's local date differs from
+    the target hour's local date, so a reading from yesterday never looks later than 'now'."""
+    tgt_day = utc_to_local(airport, parse_utc(target_utc)).date() if target_utc else None
     out = []
     for d in (drivers or [])[:3]:
         t = d.get("observed_at_utc")
-        out.append({"label": d["label"], "value": d.get("value"),
-                    "time": fmt_local(airport, t) if t else None,
+        time = None
+        if t:
+            same_day = tgt_day is not None and utc_to_local(airport, parse_utc(t)).date() == tgt_day
+            time = fmt_local(airport, t, with_date=not same_day)
+        out.append({"label": d["label"], "value": d.get("value"), "time": time,
                     "effect": d.get("effect")})
     return out
 
 
-def flight_rows(airport: str, flights: list[dict]) -> list[dict]:
-    keys = [f"p_gt{k}" for k in load_config()["delay_thresholds_min"]]
-    return [{"id": f["flight_id"], "carrier": f["carrier"],
-             "route": f"{f['origin']}→{f['dest']}",
-             "dep": fmt_local(airport, f["sched_dep_utc"]),
-             "tag": "SIMULATED",
-             "probs": [pct(f.get(k)) for k in keys]}
-            for f in (flights or [])]
+def delay_estimate_lines(est: dict | None) -> dict | None:
+    """v1.1 likely-delay range. Text comes verbatim from the back end; formatting only."""
+    if not est:
+        return None
+    one_in = round(1 / est["bad_case_level"]) if est.get("bad_case_level") else None
+    return {"typical": est["typical_text"],
+            "bad_label": f"Bad case (1-in-{one_in} chance)" if one_in else "Bad case",
+            "bad": est["bad_case_text"],
+            "bad_prob": pct(est.get("bad_case_prob")),
+            "method": est.get("method")}
 
 
 def period_banner(resp: dict) -> str | None:
@@ -193,12 +199,12 @@ def view_model(resp: dict) -> dict:
         "risk_level": resp["risk_level"],
         "risk_rows": risk_rows(resp["hour_delay_risk"]),
         "capacity": capacity_line(resp.get("capacity")),
-        "drivers": driver_lines(apt, resp.get("drivers")),
+        "drivers": driver_lines(apt, resp.get("drivers"), req["target_hour_utc"]),
         "do_text": resp["recommendation"]["text"],
         "rule": f"rule {resp['recommendation']['rule_id']}: {resp['recommendation']['triggered_by']}",
         "confidence_level": resp["confidence"]["level"],
         "confidence_reasons": " · ".join(resp["confidence"]["reasons"]),
-        "flights": flight_rows(apt, resp.get("flights")),
+        "delay_estimate": delay_estimate_lines(resp.get("delay_estimate")),
         "thresholds": [f">{k}" for k in load_config()["delay_thresholds_min"]],
         "banner": period_banner(resp),
         "footer": f"Model {resp['model_version']} · generated {resp['generated_at_utc']}",

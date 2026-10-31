@@ -1,6 +1,8 @@
+# ⇒ New here? Read **`HANDOVER.md`** (developers) or **`HOW_TO_RUN_AND_TEST.md`** (run and test). Quick start: `RUN_DASHBOARD.bat` (Windows) / `./run_dashboard.sh` (Mac/Linux).
+
 # ATC Weather Risk: 3–12 h delay & capacity forecaster (Autonomous SG 2026 · Airbus Challenge #5)
 
-A traffic flow controller enters an **airport and an hour**. The tool returns delay risk (>15/30/45/60 min), arrival capacity, why, a suggested action, confidence, and simulated example flights. Requests under 3 h or over 12 h ahead are refused.
+A traffic flow controller enters an **airport and an hour**. The tool returns delay risk (>15/30/45/60 min), arrival capacity, why, a suggested action, confidence, and a likely-delay range. Requests under 3 h or over 12 h ahead are refused.
 
 ## Start here
 1. `docs/05_Initial_Handover.md`: read first

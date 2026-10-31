@@ -20,7 +20,7 @@ from backend.clean_flights import assign_split
 from backend.common import config, path
 from backend.features import FEATURES, MAX_OBS_AGE_H
 from backend.rules import recommendation
-from backend.simulate import FlightPattern
+from backend.delay_estimate import delay_estimate
 
 SCHEMA_VERSION = config()["schema_version"]
 PKEYS = ["p_gt15", "p_gt30", "p_gt45", "p_gt60"]
@@ -37,8 +37,7 @@ def _load():
     for b in (delay, cap):  # saved models contain only the best iterations
         assert b.feature_name() == FEATURES, "model features differ from backend.features.FEATURES"
     ctx = joblib.load(m / "context.joblib")
-    pattern = joblib.load(m / "flight_pattern.joblib")
-    return card, delay, cap, ctx, pattern
+    return card, delay, cap, ctx
 
 
 def _ts(s: str) -> pd.Timestamp:
@@ -127,7 +126,7 @@ def _predict(req, airport, target_hour_utc, now_utc):
                        f"thunderstorms) is too unreliable to forecast delays usefully. This tool "
                        f"forecasts {lmin} to {lmax} h ahead.")
     # 5. recent weather
-    card, m_delay, m_cap, ctx, pattern = _load()
+    card, m_delay, m_cap, ctx = _load()
     wx = ctx.wx[ap]
     past = wx.loc[wx["obs_time_utc"] <= now, "obs_time_utc"]
     if past.empty or (now - past.max()) > pd.Timedelta(hours=MAX_OBS_AGE_H):
@@ -170,15 +169,15 @@ def _predict(req, airport, target_hour_utc, now_utc):
         conf = "HIGH"
     else:
         conf = "MEDIUM"
-    # ---- simulated flights + period
-    flights = pattern.flights(ap, T, local.hour, risk)
+    # ---- likely-delay range (v1.1) + period
+    estimate = delay_estimate(risk)
     period = str(assign_split(pd.Series([T])).iloc[0]).upper()
     return {
         "schema_version": SCHEMA_VERSION, "status": "ok", "request": req,
         "risk_level": level, "hour_delay_risk": risk, "capacity": capacity, "drivers": why,
         "recommendation": rec, "confidence": {"level": conf, "reasons": reasons},
         "weather_basis": {"last_obs_utc": _fmt(last_obs), "obs_age_h": age},
-        "flights": flights, "data_period": period, "model_version": card["model_version"],
+        "delay_estimate": estimate, "data_period": period, "model_version": card["model_version"],
         "generated_at_utc": _fmt(now),  # = forecast issue time; keeps responses deterministic (D-027)
         "refusal": None, "error": None,
     }

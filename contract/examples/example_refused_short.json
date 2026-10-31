@@ -1,7 +1,12 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "status": "refused",
-  "request": {"airport": "ATL", "target_hour_utc": "2025-06-14T18:00:00Z", "now_utc": "2025-06-14T16:00:00Z", "lead_time_h": 2},
+  "request": {
+    "airport": "ATL",
+    "target_hour_utc": "2025-06-14T18:00:00Z",
+    "now_utc": "2025-06-14T16:00:00Z",
+    "lead_time_h": 2
+  },
   "refusal": {
     "code": "LEAD_TOO_SHORT",
     "message": "18:00 UTC is only 2 h ahead. Below 3 h, current observations and controller judgement are more reliable. This tool forecasts 3 to 12 h ahead."

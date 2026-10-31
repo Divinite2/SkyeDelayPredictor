@@ -108,16 +108,10 @@ def test_response(case, responses):
         assert "No scheduled flights in the sample for this hour" in r["confidence"]["reasons"]
     if req["lead_time_h"] >= config()["confidence_rules"]["low"]["min_lead_h"]:
         assert r["confidence"]["level"] == "LOW"
-    # simulated flights
-    fl = r["flights"]
-    assert len(fl) == config()["flight_list"]["rows_shown"]
-    assert [f["sched_dep_utc"] for f in fl] == sorted(f["sched_dep_utc"] for f in fl)
-    hour_key = req["target_hour_utc"][:13].replace("-", "").replace("T", "")
-    for i, f in enumerate(fl, 1):
-        assert f["source"] == "SIMULATED"
-        assert f["flight_id"] == f"SIM-{req['airport']}-{hour_key}-{i:02d}"
-        assert f["origin"] == req["airport"] and f["sched_dep_utc"][:13] == req["target_hour_utc"][:13]
-        assert all(f[k] == risk[k] for k in PKEYS)
+    # likely-delay range (v1.1): recomputed from the hour risk with the documented rule
+    from backend.delay_estimate import delay_estimate as _de
+    assert r["delay_estimate"] == _de(risk)
+    assert "flights" not in r
     # data period
     exp_period = ("TRAIN" if req["target_hour_utc"] < "2025-01-01" else
                   "VALIDATION" if req["target_hour_utc"] < "2025-04-01" else "TEST")

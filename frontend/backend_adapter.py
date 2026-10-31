@@ -12,8 +12,9 @@ Predict = Callable[[str, str, str], dict]
 
 
 def _error(code: str, message: str, airport=None, target=None, now=None) -> dict:
-    """Contract-shaped error response (schema v1.0, status 'error')."""
-    return {"schema_version": "1.0", "status": "error",
+    """Contract-shaped error response (status 'error'); schema version read from config."""
+    from frontend.render import load_config
+    return {"schema_version": load_config()["schema_version"], "status": "error",
             "request": {"airport": airport, "target_hour_utc": target,
                         "now_utc": now, "lead_time_h": None},
             "refusal": None, "error": {"code": code, "message": message}}

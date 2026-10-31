@@ -63,10 +63,23 @@ def test_ok_card_marks_severe_45():
     assert [r["severe"] for r in rows] == [False, False, True, False]
 
 
-def test_simulated_tag_always_present():
+def test_delay_estimate_shown_verbatim():
     v = R.view_model(RED)
-    assert len(v["flights"]) == 5
-    assert all(f["tag"] == "SIMULATED" for f in v["flights"])
+    e = v["delay_estimate"]
+    assert e["typical"] == RED["delay_estimate"]["typical_text"]
+    assert e["bad"] == RED["delay_estimate"]["bad_case_text"]
+    assert e["bad_label"] == "Bad case (1-in-4 chance)"
+    assert "flights" not in v
+
+
+def test_driver_time_shows_date_when_not_target_day():
+    drivers = [{"label": "Thunderstorm earlier", "value": "22 h before the forecast",
+                "observed_at_utc": "2025-05-18T21:00:00Z", "effect": "increases"},
+               {"label": "Latest reported weather", "value": "Rain",
+                "observed_at_utc": "2025-05-19T18:00:00Z", "effect": "increases"}]
+    lines = R.driver_lines("DFW", drivers, "2025-05-20T01:00:00Z")   # target = Mon 19 May 20:00 CDT
+    assert lines[0]["time"].startswith("Sun 18 May")                  # previous local day -> dated
+    assert lines[1]["time"] == "13:00 CDT"                            # same local day -> time only
 
 
 def test_refused_and_error_cards_have_no_numbers():

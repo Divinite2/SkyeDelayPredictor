@@ -94,7 +94,8 @@ def describe(group: str, x: pd.Series, ctx: dict, effect: str) -> dict:
         if hs >= 168:
             return {"label": "No thunderstorm in the past week", "value": None, "observed_at_utc": obs}
         when = ctx["issue_time"] - pd.Timedelta(hours=hs)
-        return {"label": "Thunderstorm reported recently", "value": f"{hs:.0f} h before the forecast",
+        label = "Thunderstorm reported recently" if hs <= 6 else "Thunderstorm earlier"  # C4a (v1.1)
+        return {"label": label, "value": f"{hs:.0f} h before the forecast",
                 "observed_at_utc": _fmt_ts(when)}
     if group == "obs_age":
         return {"label": "Age of the latest weather reading", "value": f"{x['obs_age_h']:.0f} h",

@@ -27,7 +27,6 @@ from backend.train import (predict_capacity, predict_delay, train_capacity_model
                            train_delay_model)
 from backend.validate import run_checks, write_report
 from backend.rules import tune_thresholds
-from backend.simulate import FlightPattern
 from backend.weather_timeline import build_weather_hourly, inspect_extremes
 
 
@@ -84,7 +83,6 @@ def stage_model(run_test: bool) -> bool:
     save_rows(dep, "features")
     save_rows(arr, "cap_features")
     joblib.dump(ctx, models_dir / "context.joblib")
-    joblib.dump(FlightPattern(fl), models_dir / "flight_pattern.joblib")
     S = {s: dep[dep["split"] == s].reset_index(drop=True) for s in ["train", "validation", "test"]}
     C = {s: arr[arr["split"] == s].reset_index(drop=True) for s in ["train", "validation", "test"]}
 
@@ -346,3 +344,7 @@ if __name__ == "__main__":
         sys.exit(0)
     if not stage_model(run_test="--no-test" not in args):
         sys.exit("A P0 model check FAILED - see reports/metrics.md")
+    if "--no-test" not in args:  # v1.1 C3: list of test-period dates with severe delays
+        sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
+        from list_severe_dates import main as list_severe_dates
+        list_severe_dates()

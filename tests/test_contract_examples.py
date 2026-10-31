@@ -22,9 +22,8 @@ def test_example_valid(path):
         if d["observed_at_utc"] is not None:
             assert d["observed_at_utc"] <= r["request"]["now_utc"], "driver observed after forecast time (leakage)"
     assert 3 <= r["request"]["lead_time_h"] <= 12
-    for f in r["flights"]:
-        assert f["source"] == "SIMULATED"
-        assert [f[k] for k in KEYS] == [r["hour_delay_risk"][k] for k in KEYS], "simulated flights must equal hour risk"
+    assert "flights" not in r, "v1.1 removed the simulated flight list"
+    assert r["delay_estimate"]["typical_text"] and r["delay_estimate"]["bad_case_text"]
 
 def test_broken_monotonic_is_detectable():
     r = json.loads((ROOT / "contract/examples/example_ok_red.json").read_text())

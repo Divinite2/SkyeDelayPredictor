@@ -23,11 +23,8 @@ def test_example_validates(path):
     assert validate_response(resp) is None
     if resp["status"] == "ok":
         assert is_monotonic(resp["hour_delay_risk"])
-        assert len(resp["flights"]) == 5
-        for f in resp["flights"]:
-            assert f["source"] == "SIMULATED"
-            for k in ("p_gt15", "p_gt30", "p_gt45", "p_gt60"):
-                assert f[k] == resp["hour_delay_risk"][k]
+        assert "flights" not in resp
+        assert resp["delay_estimate"]["bad_case_text"]
         for d in resp["drivers"]:
             if d["observed_at_utc"]:
                 assert d["observed_at_utc"] <= resp["request"]["now_utc"]
@@ -52,7 +49,7 @@ def test_mock_responses_valid(airport, target, expect):
     assert got == expect
     if resp["status"] == "ok":
         assert resp["request"]["target_hour_utc"] == target
-        assert all(f["flight_id"].startswith(f"SIM-{resp['request']['airport']}-2025061") for f in resp["flights"])
+        assert "delay_estimate" in resp
 
 
 def test_mock_is_deterministic():

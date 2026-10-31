@@ -26,10 +26,10 @@ for c in CASES + EXTRA:
         assert p == sorted(p, reverse=True), f"{c['id']}: risks not monotonic"
         for d in r["drivers"]:
             assert d["observed_at_utc"] is None or d["observed_at_utc"] <= r["request"]["now_utc"], f"{c['id']}: future driver"
-        for f in r["flights"]:
-            assert f["source"] == "SIMULATED" and [f[k] for k in K] == p, f"{c['id']}: flight rows"
+        assert "flights" not in r, f"{c['id']}: v1.1 has no flight list"
+        e = r["delay_estimate"]
         assert r["data_period"] == "TEST", f"{c['id']}: demo case not in test period"
-        note = f'{r["risk_level"]} p>45={r["hour_delay_risk"]["p_gt45"]:.2f} cap={r["capacity"]["index"]:.2f} conf={r["confidence"]["level"]}'
+        note = f'{r["risk_level"]} p>45={r["hour_delay_risk"]["p_gt45"]:.2f} cap={r["capacity"]["index"]:.2f} conf={r["confidence"]["level"]} | mid={e["typical_text"]} bad={e["bad_case_text"]} ({e["bad_case_prob"]:.2f})'
     elif r["status"] == "refused":
         note = f'refused {r["refusal"]["code"]}'
     assert r == predict(c["airport"], c["target_hour_utc"], c["now_utc"]), f"{c['id']}: not deterministic"

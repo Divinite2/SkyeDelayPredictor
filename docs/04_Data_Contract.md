@@ -1,5 +1,7 @@
 # 04 · Data Contract: The Rules Both Back End and Front End Must Follow
 
+> **CURRENT VERSION: v1.1** (see `docs/16_Change_List_v1.1.md`). Changes since v1.0: **`flights` removed** (no simulated flight list). **New required `delay_estimate`** on `ok` responses: `{typical_text, bad_case_text, bad_case_prob, bad_case_level, method}`. `config.yaml`: `flight_list` replaced by `delay_estimate: {typical_prob, bad_case_prob}`. Where this document still mentions flights or SIMULATED rows, those parts are historical. **`contract/schema.json` is authoritative.**
+
 **Status:** **AGREED v1.0** (lead approval at merge `cp0-contract`). Back-end lead: ☑ · Front-end lead: ☑ · Authoritative files: `contract/schema.json` and `contract/examples/*.json` in the repo. If this document and those files ever disagree, the files win and this document gets fixed.
 
 **v1.0 clarifications from the merge:** `recommendation.triggered_by` is **always a string**, never null (GREEN uses `"no RED or AMBER condition met"`). Request fields may be null on refused or error responses only. Optional numbers (`aar_*`) are null or ≥ 0.

@@ -90,3 +90,13 @@ Every deviation from the project documents (01–06) is recorded here: what, why
 | I-002 | 2026-10-31 | **F3b.1/F3b.2:** `frontend/demo_cases.py` rewritten to read `reports/demo_cases.json` (`cases[]`: id, label, airport, now_utc, target_hour_utc). Presets = the file's cases in file order, labels verbatim; auto-generated refusal presets removed; no hard-coded ids. Missing/invalid file (bad JSON, no/empty `cases`, missing or empty field, non-UTC time, duplicate id or label) → `[]`. `frontend/app.py`: picker hidden and grey "Demo cases not available" shown when there are no presets; manual inputs unchanged. Mock mode only: falls back to new labelled fixture `tests/fixtures/demo_cases_sample.json` ("(mock sample)" in every label). Old `tests/fixtures/demo_cases_sample.md` left in place, now unused. | L-017, L-019, docs/15 §2 | Real picker shows exactly the 5 JSON labels (`ui_f3b_picker.png`). Fallback checked by hand with the JSON moved away in real mode: note shown, picker hidden, Check still returns a card. |
 | I-003 | 2026-10-31 | **F3b.3:** `render.capacity_line()` adds `visible_note` = `aar_note` (verbatim from the response) when `index_low` and `index_high` are both null; `app.py` shows it as grey text under the capacity line (the ⓘ tooltip stays). | F3.7 / L-008 | `ui_f3b_true_red.png` |
 | I-004 | 2026-10-31 | **F3b.4:** `tests/test_demo_cases.py` rewritten for JSON (real file verbatim + order, no extra presets, no duplicates, duplicate rejection, missing file, 8 invalid shapes, mock fixture states); one render test `test_capacity_note_visible_when_range_null` in `tests/test_render.py`. | docs/15 §2 | **133 passed** (was 123). |
+
+## Final changes before handover (v1.1). Details in docs/16_Change_List_v1.1.md
+| ID | Decision |
+|---|---|
+| L-021 | T-0, B3.10 and F-3b approved (lead reviewed); tags t0-check, b3-10, f3-ready |
+| L-022 | Owner request: simulated flight table removed; likely-delay range added (middle estimate + 1-in-4 bad case, derived from band probabilities, no retraining); contract v1.1 |
+| L-023 | Integration-expert issues fixed: storm driver wording by age, footer shows back-end mode + response time, driver times dated when not on the target day |
+| L-024 | Severe-delay date list (scripts/list_severe_dates.py) added to run_all; includes misses for honesty |
+| L-025 | Open: updated brief's wind-direction file (challenge5_hourly_weather_ATL_DFW.csv) never received; top backlog item in HANDOVER.md §9 |
+

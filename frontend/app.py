@@ -5,6 +5,7 @@ Displays only what predict() returns; formatting is the only computation here.
 from __future__ import annotations
 
 import os
+import time
 import sys
 from datetime import date
 from html import escape
@@ -42,6 +43,8 @@ st.markdown("""<style>
 .row.severe .fill {background:#262b33;}
 .sevtag {font-size:0.75rem; font-weight:700; color:#262b33;}
 .muted {color:#8a8f98; font-size:0.8rem;}
+.est {display:flex; gap:0.8rem; align-items:baseline; font-size:1.05rem; margin:0.15rem 0;}
+.est-lab {flex:0 0 13rem; color:#5f6670; font-size:0.9rem;}
 .kv b {margin-right:0.3rem;}
 ul.why {margin:0; padding-left:1.1rem;} ul.why li {margin:0.1rem 0;}
 table.sim {width:100%; border-collapse:collapse; font-style:italic; color:#7a808a; font-size:0.9rem;}
@@ -177,7 +180,9 @@ st.divider()
 # ---------------- Call (one click -> one predict; response shown untouched) ----------------
 if st.session_state.get("pending"):
     with st.spinner("Calculating…"):
+        _t0 = time.perf_counter()
         st.session_state["resp"] = predict(*st.session_state.pop("pending"))
+        st.session_state["elapsed_s"] = time.perf_counter() - _t0  # C4b (v1.1): shown in footer
     st.session_state["busy"] = False
     st.rerun()
 
@@ -208,30 +213,29 @@ def ok_card(v: dict) -> str:
             f"{' <span class=muted>(' + d['time'] + ')</span>' if d['time'] else ''}</li>"
             for d in v["drivers"])
         why = f"<div class='sec'><div class='sec-title'>WHY</div><ul class='why'>{items}</ul></div>"
-    flights = ""
-    if v["flights"]:
-        th = "".join(f"<th>{t}</th>" for t in v["thresholds"])
-        trs = "".join(
-            f"<tr><td>{escape(f['id'])}</td><td>{escape(f['carrier'])}</td><td>{escape(f['route'])}</td>"
-            f"<td>{f['dep']}</td><td><span class='simtag'>{f['tag']}</span></td>"
-            + "".join(f"<td>{p}</td>" for p in f["probs"]) + "</tr>"
-            for f in v["flights"])
-        flights = (f"<div class='sec'><div class='sec-title'>EXAMPLE FLIGHTS IN THIS HOUR (SIMULATED)</div>"
-                   f"<table class='sim'><tr><th>ID</th><th>Carrier</th><th>Route</th><th>Dep</th>"
-                   f"<th>Source</th>{th}</tr>{trs}</table>"
-                   f"<div class='muted' style='margin-top:0.3rem'>ⓘ {R.SIM_NOTE}</div></div>")
+    est = ""
+    if v.get("delay_estimate"):
+        e = v["delay_estimate"]
+        est = (f"<div class='sec'><div class='sec-title'>LIKELY DELAY · typical departure this hour</div>"
+               f"<div class='est'><span class='est-lab'>Middle estimate</span><b>{escape(e['typical'])}</b></div>"
+               f"<div class='est'><span class='est-lab'>{escape(e['bad_label'])}</span><b>{escape(e['bad'])}</b>"
+               f" <span class='muted'>({e['bad_prob']})</span></div>"
+               f"<div class='muted'>{escape(e['method'] or '')}</div></div>")
     return (
         f"<div class='card' style='border-left:6px solid {col}'>"
         f"<div class='card-head'><span>{escape(v['header'])}</span>"
         f"<span class='lvl' style='background:{col}'>{LEVEL_ICON[lvl]} {lvl}</span></div>"
+        f"{est}"
         f"<div class='sec'><div class='sec-title'>DEPARTURE DELAY RISK</div>{rows}</div>"
         f"{cap}{why}"
         f"<div class='sec'><div class='sec-title'>DO · suggestion, controller decides</div>"
         f"{escape(v['do_text'])} <span class='muted'>({escape(v['rule'])})</span></div>"
         f"<div class='sec kv'><span class='sec-title'>CONFIDENCE&nbsp;</span>"
         f"<b>{v['confidence_level']}</b><span class='muted'>· {escape(v['confidence_reasons'])}</span></div>"
-        f"{flights}</div>"
-        f"<div class='muted' style='margin-top:0.4rem'>{escape(v['footer'])}</div>")
+        f"</div>"
+        f"<div class='muted' style='margin-top:0.4rem'>{escape(v['footer'])} · Back end: {MODE}"
+        + (f" · answered in {st.session_state['elapsed_s']:.2f} s" if st.session_state.get('elapsed_s') is not None else "")
+        + (" (demo data, not a forecast)" if MODE == "mock" else "") + "</div>")
 
 
 resp = st.session_state.get("resp")

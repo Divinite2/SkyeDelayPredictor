@@ -52,12 +52,6 @@ def _restamp_ok(resp: dict, airport: str, target: datetime, now: datetime, lead:
                                      for r in resp["confidence"]["reasons"]]
     resp["weather_basis"]["last_obs_utc"] = _shift(resp["weather_basis"]["last_obs_utc"], delta)
     resp["generated_at_utc"] = _shift(resp["generated_at_utc"], delta)
-    for i, f in enumerate(resp["flights"], start=1):
-        f["sched_dep_utc"] = _shift(f["sched_dep_utc"], delta)
-        if f["dest"] == airport:
-            f["dest"] = f["origin"]
-        f["origin"] = airport
-        f["flight_id"] = f"SIM-{airport}-{target.strftime('%Y%m%d%H')}-{i:02d}"
     return resp
 
 
@@ -121,7 +115,7 @@ def predict(airport: str, target_hour_utc: str, now_utc: str) -> dict:
         return resp
 
     except Exception as exc:  # contract: never raise
-        return {"schema_version": "1.0", "status": "error",
+        return {"schema_version": CONFIG["schema_version"], "status": "error",
                 "request": {"airport": str(airport), "target_hour_utc": str(target_hour_utc),
                             "now_utc": str(now_utc), "lead_time_h": None},
                 "refusal": None,

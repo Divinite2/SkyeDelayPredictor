@@ -1,7 +1,12 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "status": "refused",
-  "request": {"airport": "ORD", "target_hour_utc": "2025-06-14T22:00:00Z", "now_utc": "2025-06-14T16:00:00Z", "lead_time_h": 6},
+  "request": {
+    "airport": "ORD",
+    "target_hour_utc": "2025-06-14T22:00:00Z",
+    "now_utc": "2025-06-14T16:00:00Z",
+    "lead_time_h": 6
+  },
   "refusal": {
     "code": "UNKNOWN_AIRPORT",
     "message": "ORD is not in the processed data. This tool currently covers ATL (KATL) and DFW (KDFW)."

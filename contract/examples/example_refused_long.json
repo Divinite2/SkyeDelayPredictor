@@ -1,7 +1,12 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "status": "refused",
-  "request": {"airport": "ATL", "target_hour_utc": "2025-06-15T05:00:00Z", "now_utc": "2025-06-14T16:00:00Z", "lead_time_h": 13},
+  "request": {
+    "airport": "ATL",
+    "target_hour_utc": "2025-06-15T05:00:00Z",
+    "now_utc": "2025-06-14T16:00:00Z",
+    "lead_time_h": 13
+  },
   "refusal": {
     "code": "LEAD_TOO_LONG",
     "message": "05:00 UTC is 13 h ahead. Beyond 12 h, weather (especially thunderstorms) is too unreliable to forecast usefully. This tool forecasts 3 to 12 h ahead."

@@ -51,23 +51,15 @@ def test_example(path):
         if d["observed_at_utc"] is not None:
             assert ts(d["observed_at_utc"]) <= ts(req["now_utc"])
     assert ts(body["weather_basis"]["last_obs_utc"]) <= ts(req["now_utc"])
-    # simulated flights: right count, labelled, equal to hour risk, sorted, inside target hour
-    fl = body["flights"]
-    assert len(fl) == CFG["flight_list"]["rows_shown"]
-    deps = [f["sched_dep_utc"] for f in fl]
-    assert deps == sorted(deps)
-    hour_key = req["target_hour_utc"][:13].replace("-", "").replace("T", "")
-    for f in fl:
-        assert f["source"] == "SIMULATED"
-        assert f["origin"] == req["airport"]
-        assert f["flight_id"].startswith(f"SIM-{req['airport']}-{hour_key}-")
-        assert f["sched_dep_utc"][:13] == req["target_hour_utc"][:13]
-        assert all(f[k] == risk[k] for k in PKEYS)
+    # v1.1: no flight list; likely-delay range consistent with the hour risk
+    assert "flights" not in body
+    from backend.delay_estimate import delay_estimate
+    assert body["delay_estimate"] == delay_estimate(risk)
 
 
 def test_broken_examples_are_rejected():
-    """Sanity: the schema actually catches violations (missing SIMULATED tag, bad prob)."""
+    """Sanity: the schema actually catches violations (bad delay_estimate text, bad prob)."""
     body = json.loads((ROOT / "contract/examples/example_ok_red.json").read_text())
-    body["flights"][0]["source"] = "REAL"
+    body["delay_estimate"]["typical_text"] = "23 minutes"
     body["hour_delay_risk"]["p_gt15"] = 1.5
     assert list(Draft202012Validator(SCHEMA).iter_errors(body))

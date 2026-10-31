@@ -1,6 +1,6 @@
 # Shared configuration — copied verbatim from 04_Data_Contract.md §2.
 # Both back end and front end read this file. Do not hard-code these values elsewhere.
-schema_version: "1.0"
+schema_version: "1.1"
 lead_time_hours: {min: 3, max: 12}          # inclusive, whole hours only
 report_lead_times: [3, 6, 9, 12]            # headline metrics
 delay_thresholds_min: [15, 30, 45, 60]      # P(delay > k)
@@ -20,7 +20,7 @@ risk_rules:            # Tuned on VALIDATION (L-011, B3.2): colour from P(>45) o
 confidence_rules:
   high:  {max_lead_h: 6,  max_obs_age_h: 1}
   low:   {min_lead_h: 10, min_obs_age_h: 3}   # either condition -> LOW
-flight_list: {rows_shown: 5}                  # number of SIMULATED example flights per hour
+delay_estimate: {typical_prob: 0.5, bad_case_prob: 0.25}   # v1.1 likely-delay range (docs/16 §2)
 nominal_arrival_rate: {ATL: null, DFW: null}  # null = show capacity as % only (no external data)
 
 # --- Back-end-only addition (logged in reports/decisions_log.md, D-001) ---
