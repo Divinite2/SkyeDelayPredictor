@@ -8,6 +8,7 @@
 0. **The lead has already built the starting repo** (`atc-weather-risk.bundle` / `.zip` in the outputs). It contains the folder layout, shared config, contract schema, 6 example responses, a passing contract test and all docs, tagged `cp0-draft`. The repo operator creates an **empty** private GitHub repo and pushes it:
    ```
    git clone atc-weather-risk.bundle atc-weather-risk && cd atc-weather-risk
+   git switch backend && git switch frontend && git switch main
    git remote set-url origin https://github.com/<you>/atc-weather-risk.git
    git push -u origin main backend frontend --tags
    ```
