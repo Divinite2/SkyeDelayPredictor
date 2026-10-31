@@ -64,6 +64,7 @@
 | B2.9 | **One test-set run** after all tuning is frozen | The same table on test, run once and logged. Include the seasonal comparison from B-b. |
 | B2.10 | `reports/failure_cases.md` | One miss (GREEN predicted, severe delays happened) and one false alarm (RED predicted, flights on time), each with inputs, timestamps, the reason and a fix |
 | B2.11 | `models/` plus `model_card.json` | Version, training dates, features, validation scores |
+| B2.12 | Counts and definitions (notes B-c, B-e) | Every rate in `metrics.md` and `failure_cases.md` shows its **count** (n = …). Severe is always defined as **"> 45 min late or cancelled"** (11.3% train / 17.8% test). No storm features beyond the planned list. |
 
 **Traps:** T1, T2, T3, T11, T12, T13, T14, T15, T16, T17.
 
@@ -85,7 +86,7 @@
 |---|---|---|
 | F2.1 | One-page user story | Traffic flow controller at ATL/DFW · today: arrival rates cut once the weather arrives · cost: holding, taxiing with engines running, cancellations · our tool: 3–12 h warning with reasons · the controller decides |
 | F2.2 | Why 3–12 h | Two sentences (`01_Workflow.md` §2) |
-| F2.3 | 6-part pitch outline (`01_Workflow.md` §7) | **Fits in 3 minutes.** Placeholders for the B-2 numbers. Uses `timezone_fix.png` and `severe_by_weather.png`. |
+| F2.3 | 6-part pitch outline (`01_Workflow.md` §7) | **Fits in 3 minutes.** Placeholders for the B-2 numbers. Uses `timezone_fix.png` and `severe_by_weather.png`. Quotes severe rates with the agreed definition ("> 45 min late or cancelled", note B-e) and the storm count (69, note B-c). |
 | F2.4 | Limitations and next-steps slide | ~1% sample · capacity index instead of AAR · no wind direction (worst-case crosswind) · no gust data · simulated flights · harder summer test period · the removed-scope items as next steps |
 
 ### F-3: "Integration-ready UI", front end
@@ -106,6 +107,7 @@
 | J1.3 | Fresh-clone test on a second laptop | `pip install -r requirements.txt` → `python run_all.py` → `streamlit run frontend/app.py` |
 | J1.4 | Backup | Short screen recording of the demo |
 | J1.5 | Trap register | All 26 ticked or explained |
+| J1.5b | Check note F-c on real output | WHY labels read naturally, with no repeated wording (e.g. not "Thunderstorm reported: Thunderstorm (code 25)"). The back end fixes labels in `drivers.py` if needed. |
 | J1.6 | **Submit v1** | The lead tags `v1-submitted`. **Freeze.** |
 
 ---
