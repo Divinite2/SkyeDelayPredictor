@@ -134,7 +134,10 @@ def capacity_line(cap: dict | None) -> dict | None:
         aar = f"≈ {round(cap['aar_est'])} arrivals/h"
         if cap.get("aar_low") is not None and cap.get("aar_high") is not None:
             aar += f" ({round(cap['aar_low'])}–{round(cap['aar_high'])})"
-    return {"text": text, "aar": aar, "note": cap.get("aar_note")}
+    no_range = cap.get("index_low") is None and cap.get("index_high") is None
+    # F3b.3 / F3.7: with no range, the back end's aar_note is shown as visible grey text
+    visible = cap.get("aar_note") if no_range and cap.get("aar_note") else None
+    return {"text": text, "aar": aar, "note": cap.get("aar_note"), "visible_note": visible}
 
 
 def driver_lines(airport: str, drivers: list[dict]) -> list[dict]:

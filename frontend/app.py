@@ -15,7 +15,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from frontend import render as R  # noqa: E402
 from frontend.backend_adapter import backend_mode, load_predict  # noqa: E402
-from frontend.demo_cases import load_presets  # noqa: E402
+from frontend.demo_cases import MOCK_SAMPLE_PATH, load_presets  # noqa: E402
 
 CFG = R.load_config()
 DEMO_DATE = date.fromisoformat(os.getenv("DEMO_DATE", "2025-06-14"))   # default in test period
@@ -84,8 +84,8 @@ def _known(code: str) -> str | None:
 
 # ---------------- Demo presets (F3.5) ----------------
 PRESETS = load_presets()
-if not PRESETS and MODE == "mock":   # until the back end delivers reports/demo_cases.md
-    PRESETS = load_presets(R.ROOT / "tests" / "fixtures" / "demo_cases_sample.md")
+if not PRESETS and MODE == "mock":   # labelled sample fixture, mock mode only (F3b.2)
+    PRESETS = load_presets(MOCK_SAMPLE_PATH)
 
 
 def _apply_preset():
@@ -110,7 +110,9 @@ def _apply_preset():
 
 if PRESETS:
     st.selectbox("Demo cases", ["—"] + [c["label"] for c in PRESETS], key="preset",
-                 on_change=_apply_preset, help="Filled from reports/demo_cases.md")
+                 on_change=_apply_preset, help="Filled from reports/demo_cases.json")
+else:  # F3b.2: picker hidden, manual inputs still work
+    st.markdown("<div class='muted'>Demo cases not available</div>", unsafe_allow_html=True)
 
 # ---------------- Input bar ----------------
 free_entry = st.session_state["free_entry"]
@@ -196,7 +198,9 @@ def ok_card(v: dict) -> str:
         title = f" title='{escape(c['note'])}'" if c["note"] else ""
         aar = f" · {escape(c['aar'])}" if c["aar"] else ""
         cap = (f"<div class='sec'><div class='sec-title'>ARRIVAL CAPACITY</div>"
-               f"<span{title}>{escape(c['text'])}{aar} <span class='muted'>ⓘ</span></span></div>")
+               f"<span{title}>{escape(c['text'])}{aar} <span class='muted'>ⓘ</span></span>"
+               + (f"<div class='muted'>{escape(c['visible_note'])}</div>" if c["visible_note"] else "")
+               + "</div>")
     why = ""
     if v["drivers"]:
         items = "".join(

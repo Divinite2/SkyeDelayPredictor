@@ -36,6 +36,17 @@ def test_capacity_text_and_no_aar_when_null():
     assert c["aar"] is None
 
 
+def test_capacity_note_visible_when_range_null():
+    """F3b.3 / F3.7: no range + aar_note -> note shown as visible text, taken from the response."""
+    resp = copy.deepcopy(RED)
+    resp["capacity"].update(index_low=None, index_high=None, aar_note="Range not shown: test note.")
+    c = R.view_model(resp)["capacity"]
+    assert c["text"] == "70% of scheduled arrivals on time"          # no range in the line
+    assert c["visible_note"] == "Range not shown: test note."         # verbatim from response
+    with_range = R.capacity_line(RED["capacity"])                     # range present -> no grey note
+    assert with_range["visible_note"] is None
+
+
 def test_monotonic_violation_gives_error_card():
     assert R.view_model(BROKEN)["kind"] == "error"
 

@@ -1,52 +1,81 @@
-"""F3.5: demo presets parsed from reports/demo_cases.md format."""
+"""F-3b (F3b.1, F3b.2, F3b.4): demo presets read from reports/demo_cases.json (L-017, L-019)."""
+import json
 from pathlib import Path
+
+import pytest
 
 from frontend import demo_cases as D
 from frontend import mock_backend
-from frontend.render import parse_utc
 
 ROOT = Path(__file__).resolve().parent.parent
-SAMPLE = ROOT / "tests/fixtures/demo_cases_sample.md"
+REAL = ROOT / "reports/demo_cases.json"
+SAMPLE = ROOT / "tests/fixtures/demo_cases_sample.json"
+KEYS = ["id", "label", "airport", "now_utc", "target_hour_utc"]
 
 
-def test_parse_sample():
-    cases = D.parse_demo_cases(SAMPLE.read_text())
-    assert len(cases) == 3
-    assert cases[0] == {"label": "Storm hour flagged RED, 6 h ahead (mock)", "airport": "ATL",
-                        "now_utc": "2025-06-14T16:00:00Z", "target_hour_utc": "2025-06-14T22:00:00Z"}
+def _write(tmp_path, obj):
+    p = tmp_path / "demo_cases.json"
+    p.write_text(obj if isinstance(obj, str) else json.dumps(obj))
+    return p
 
 
-def test_tolerant_parsing():
-    text = """Intro text
-| # | Scenario | Airport | Now (UTC) | Target hour (UTC) | Extra |
-|---|---|---|---|---|---|
-| 1 | Storm | atl | `2025-06-14T16:00:00Z` | `2025-06-14T22:00:00Z` | x |
-| 2 | Broken row | DFW | not a time | 2025-06-14T22:00:00Z | y |
-"""
-    cases = D.parse_demo_cases(text)
-    assert len(cases) == 1                      # malformed row skipped
-    assert cases[0]["airport"] == "ATL" and cases[0]["label"] == "Storm"
+def test_parse_real_file_labels_verbatim_in_order():
+    """Presets = exactly the cases in the back end's JSON: same count, order and label text."""
+    raw = json.loads(REAL.read_text())["cases"]
+    presets = D.load_presets(REAL)
+    assert [p["label"] for p in presets] == [c["label"] for c in raw]
+    assert [p["id"] for p in presets] == [c["id"] for c in raw]
+    assert presets == [{k: c[k] for k in KEYS} for c in raw]
+
+
+def test_no_extra_or_auto_refusal_presets():
+    presets = D.load_presets(REAL)
+    assert len(presets) == len(json.loads(REAL.read_text())["cases"])
+    assert not any("unknown airport" in p["label"].lower() for p in presets)
+    assert not hasattr(D, "refusal_presets")
+
+
+def test_no_duplicate_labels_or_ids_in_real_file():
+    presets = D.load_presets(REAL)
+    for k in ("id", "label"):
+        assert len({p[k] for p in presets}) == len(presets)
+
+
+def test_duplicate_labels_rejected(tmp_path):
+    c = {"id": "a", "label": "Same", "airport": "ATL",
+         "now_utc": "2025-06-14T16:00:00Z", "target_hour_utc": "2025-06-14T22:00:00Z"}
+    p = _write(tmp_path, {"cases": [c, dict(c, id="b")]})
+    assert D.load_presets(p) == []
 
 
 def test_missing_file_gives_no_presets(tmp_path):
-    assert D.load_presets(tmp_path / "nope.md") == []
+    assert D.load_presets(tmp_path / "nope.json") == []
 
 
-def test_refusal_presets_derived_from_first_case():
+@pytest.mark.parametrize("content", [
+    "not json {",
+    [],
+    {"version": "x"},
+    {"cases": []},
+    {"cases": "nope"},
+    {"cases": [{"id": "a", "label": "A", "airport": "ATL", "now_utc": "2025-06-14T16:00:00Z"}]},
+    {"cases": [{"id": "a", "label": "A", "airport": "ATL",
+                "now_utc": "2025-06-14 16:00", "target_hour_utc": "2025-06-14T22:00:00Z"}]},
+    {"cases": [{"id": "a", "label": "", "airport": "ATL",
+                "now_utc": "2025-06-14T16:00:00Z", "target_hour_utc": "2025-06-14T22:00:00Z"}]},
+], ids=["bad_json", "list", "no_cases", "empty_cases", "cases_not_list", "missing_field",
+        "bad_time", "empty_label"])
+def test_invalid_file_gives_no_presets(tmp_path, content):
+    p = _write(tmp_path, content if isinstance(content, str) else json.dumps(content))
+    assert D.load_presets(p) == []
+
+
+def test_sample_fixture_is_labelled_and_states_on_mock():
+    """The mock-only sample fixture: labelled as a sample, and gives the expected mock states."""
     presets = D.load_presets(SAMPLE)
-    assert len(presets) == 6
-    leads = {p["label"]: (parse_utc(p["target_hour_utc"]) - parse_utc(p["now_utc"])).total_seconds() / 3600
-             for p in presets}
-    assert leads["Refused: 2 h ahead"] == 2
-    assert leads["Refused: 13 h ahead"] == 13
-    assert presets[-1]["airport"] == "ORD"
-
-
-def test_presets_produce_expected_states_on_mock():
-    got = {p["label"]: mock_backend.predict(p["airport"], p["target_hour_utc"], p["now_utc"])
-           for p in D.load_presets(SAMPLE)}
-    assert got["Storm hour flagged RED, 6 h ahead (mock)"]["risk_level"] == "RED"
-    assert got["Calm GREEN hour (mock)"]["risk_level"] == "GREEN"
-    assert got["Refused: 2 h ahead"]["refusal"]["code"] == "LEAD_TOO_SHORT"
-    assert got["Refused: 13 h ahead"]["refusal"]["code"] == "LEAD_TOO_LONG"
-    assert got["Refused: unknown airport (ORD)"]["refusal"]["code"] == "UNKNOWN_AIRPORT"
+    assert len(presets) == 5 and all("mock sample" in p["label"] for p in presets)
+    got = {p["id"]: mock_backend.predict(p["airport"], p["target_hour_utc"], p["now_utc"]) for p in presets}
+    assert got["true_red"]["risk_level"] == "RED"
+    assert got["calm"]["risk_level"] == "GREEN"
+    assert got["too_soon"]["refusal"]["code"] == "LEAD_TOO_SHORT"
+    assert got["too_far"]["refusal"]["code"] == "LEAD_TOO_LONG"
