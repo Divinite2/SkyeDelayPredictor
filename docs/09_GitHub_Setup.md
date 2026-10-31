@@ -1,5 +1,7 @@
 # 09 · GitHub Setup (one-time, done by the repo operator)
 
+**Repository name: `AutonomousSGHack`** (hackathon rule). The files from the lead are still called `atc-weather-risk.bundle` / `.zip`. That's only the file name; the GitHub repo and your local folder are `AutonomousSGHack`.
+
 **You need:** a GitHub account, and **either** GitHub Desktop (easiest) **or** git on the command line. You also need `atc-weather-risk.bundle` from the lead's outputs.
 **Don't** upload the files through the GitHub website. It rejects files over 25 MB, and the data CSV is 64 MB. Use Desktop or the command line.
 
@@ -7,25 +9,25 @@
 
 ## Step 1: Create an empty private repo
 1. Go to github.com and sign in, then click **+** (top right) → **New repository**.
-2. Name: `atc-weather-risk` · choose **Private**.
+2. Name: `AutonomousSGHack` (required by the hackathon rules; spell it exactly) · choose **Private**, unless the hackathon rules say the repo must be public.
 3. **Leave every "Initialize" box unticked** (no README, no .gitignore, no licence). The repo must be empty.
-4. Click **Create repository** and copy the URL, e.g. `https://github.com/<you>/atc-weather-risk.git`.
+4. Click **Create repository** and copy the URL, e.g. `https://github.com/<you>/AutonomousSGHack.git`.
 
 ## Step 2: Push the lead's repo
 
 ### Option A: command line
 ```bash
-git clone atc-weather-risk.bundle atc-weather-risk
-cd atc-weather-risk
+git clone atc-weather-risk.bundle AutonomousSGHack
+cd AutonomousSGHack
 git switch backend && git switch frontend && git switch main
-git remote set-url origin https://github.com/<you>/atc-weather-risk.git
+git remote set-url origin https://github.com/<you>/AutonomousSGHack.git
 git push -u origin main backend frontend
 git push origin --tags
 ```
 If git asks for a password, use a **personal access token** (GitHub → Settings → Developer settings → Personal access tokens), not your account password. **Never paste the token into this chat.**
 
 ### Option B: GitHub Desktop
-1. Unzip `atc-weather-risk.zip`. It already contains the full git history and branches.
+1. Unzip `atc-weather-risk.zip` and **rename the folder to `AutonomousSGHack`**. It already contains the full git history and branches.
 2. GitHub Desktop → **File → Add local repository** → pick the folder.
 3. **Repository → Repository settings → Remote** → paste the URL from Step 1.
 4. Click **Publish / Push origin**. Then switch the branch selector to `backend` and push, then to `frontend` and push.
@@ -47,8 +49,8 @@ Repo → **Settings → Branches → Add branch protection rule** (or **Rulesets
 
 ## Step 5: How each developer starts
 ```bash
-git clone https://github.com/<you>/atc-weather-risk.git
-cd atc-weather-risk
+git clone https://github.com/<you>/AutonomousSGHack.git
+cd AutonomousSGHack
 git switch backend          # or: git switch frontend
 python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
