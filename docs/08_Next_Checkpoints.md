@@ -45,10 +45,10 @@
 
 ```
  BACK END:   B-2 Model honest ──► B-3 predict() ready ──┐
-                                                         ├──► J-1 Integrate + SUBMIT v1 ──► FREEZE
- FRONT END:  F-2 Story & pitch ─┐                        │
-             F-3 Integration-ready UI ──────────────────┘
+                                                         ├──► J-1 Integrate + SUBMIT v1 ──► FREEZE: F-2 Story & pitch (last)
+ FRONT END:  F-3 Integration-ready UI (now) ────────────┘
 ```
+**Order change (lead):** the front end does **F-3 first** (detailed instructions: `docs/10_F3_Instructions.md`), then J-1, then **F-2 last**, during the freeze, so the pitch uses real numbers and real screenshots.
 
 ### B-2: "The model is honest" (Gate 2), back end
 | # | Deliverable | Pass condition |
@@ -78,10 +78,10 @@
 | B3.5 | 5 simulated flights | Seeded, sorted, `SIMULATED`, probabilities equal to the hour risk |
 | B3.6 | `tests/test_contract.py` on **real** output | 20 fixed requests (normal, storm, all 6 refusal codes, error) validate against `contract/schema.json`. Same request gives the same answer. |
 | B3.7 | Speed | Under 1 s per call after the first load |
-| B3.8 | **Demo list** → `reports/demo_cases.md` | From the **test period**: (1) a storm hour correctly flagged RED 6 h ahead, (2) a calm GREEN hour, (3) the failure case. Airport, now and target for each, handed to the front end. |
+| B3.8 | **Demo list** → `reports/demo_cases.json` (format in `docs/10_F3_Instructions.md` F3.5) plus a short `reports/demo_cases.md` explaining each | From the **test period**: (1) a storm hour correctly flagged RED 6 h ahead, (2) a calm GREEN hour, (3) the failure case, plus the two refusal cases. `version` set to the model version, not "placeholder". |
 | B3.9 | `run_all.py` builds everything | Data → features → baselines → models → reports → model card in one command |
 
-### F-2: "Story and pitch draft", front end (start now, no code)
+### F-2: "Story and pitch", front end (**LAST**: after J-1, during the freeze)
 | # | Deliverable | Pass condition |
 |---|---|---|
 | F2.1 | One-page user story | Traffic flow controller at ATL/DFW · today: arrival rates cut once the weather arrives · cost: holding, taxiing with engines running, cancellations · our tool: 3–12 h warning with reasons · the controller decides |
@@ -89,14 +89,14 @@
 | F2.3 | 6-part pitch outline (`01_Workflow.md` §7) | **Fits in 3 minutes.** Placeholders for the B-2 numbers. Uses `timezone_fix.png` and `severe_by_weather.png`. Quotes severe rates with the agreed definition ("> 45 min late or cancelled", note B-e) and the storm count (69, note B-c). |
 | F2.4 | Limitations and next-steps slide | ~1% sample · capacity index instead of AAR · no wind direction (worst-case crosswind) · no gust data · simulated flights · harder summer test period · the removed-scope items as next steps |
 
-### F-3: "Integration-ready UI", front end
+### F-3: "Integration-ready UI", front end (**NOW**; full instructions in `docs/10_F3_Instructions.md`)
 | # | Deliverable | Pass condition |
 |---|---|---|
 | F3.1 | Fix F-a | Check button not red |
 | F3.2 | Fix F-b | In `BACKEND=real`, responses go to the screen untouched (test added) |
 | F3.3 | Real adapter | `BACKEND=real` imports `backend.api.predict`. If the import fails, the **error card** shows, never a crash. |
 | F3.4 | Loading | `@st.cache_resource` for anything heavy. The spinner shows during real calls. |
-| F3.5 | Demo presets | A small "Demo cases" picker filled from `reports/demo_cases.md` (B3.8), so the pitch needs no typing |
+| F3.5 | Demo presets | A small "Demo cases" picker filled from `reports/demo_cases.json` (B3.8), so the pitch needs no typing |
 | F3.6 | Contract tests still green | All tests pass with the merged schema |
 
 ### J-1: "Integration and SUBMIT v1", both
@@ -113,4 +113,4 @@
 ---
 
 ## 4. Report back
-Same template as before (`06_First_Checkpoints.md`, bottom). Send B-2 and F-2 first. The lead tags `b2-model`, `b3-api`, `f2-story`, `f3-ready` and `v1-submitted` as each one is approved.
+Same template as before (`06_First_Checkpoints.md`, bottom). Send B-2 and F-3 first. F-2 comes last. The lead tags `b2-model`, `b3-api`, `f2-story`, `f3-ready` and `v1-submitted` as each one is approved.
