@@ -45,10 +45,11 @@ def delay_metrics(df: pd.DataFrame, preds: dict) -> pd.DataFrame:
                 both = 0 < y45.sum() < len(y45)
                 r["pr_auc_gt45"] = round(average_precision_score(y45, p45), 4) if both else np.nan
                 r["roc_auc_gt45"] = round(roc_auc_score(y45, p45), 4) if both else np.nan
-                flag = p45 >= RED["p_gt45_min"]
-                r["n_red_flag"] = int(flag.sum())
-                r["precision_at_red"] = round(y45[flag].mean(), 4) if flag.any() else np.nan
-                r["recall_at_red"] = round(flag[y45 == 1].mean(), 4) if y45.any() else np.nan
+                for lvl, thr in (("red", RED["p_gt45_min"]), ("amber_plus", AMBER["p_gt45_min"])):
+                    flag = p45 >= thr
+                    r[f"n_{lvl}_flag"] = int(flag.sum())
+                    r[f"precision_at_{lvl}"] = round(y45[flag].mean(), 4) if flag.any() else np.nan
+                    r[f"recall_at_{lvl}"] = round(flag[y45 == 1].mean(), 4) if y45.any() else np.nan
                 out.append(r)
     return pd.DataFrame(out)
 
@@ -111,9 +112,18 @@ def capacity_range(h: pd.DataFrame, model: str) -> dict:
 
 
 def risk_level(p45, cap):
-    red = (p45 >= RED["p_gt45_min"]) | (cap <= RED["capacity_index_max"])
-    amber = (p45 >= AMBER["p_gt45_min"]) | (cap <= AMBER["capacity_index_max"])
-    return np.where(red, "RED", np.where(amber, "AMBER", "GREEN"))
+    """Delegates to the single rule implementation (backend.rules; L-011)."""
+    from backend.rules import risk_level as _rl
+    return _rl(p45, cap)
+
+
+def _rule_text():
+    def one(r):
+        s = f"P(>45) ≥ {r['p_gt45_min']}"
+        if r.get("capacity_index_max") is not None:
+            s += f" or capacity ≤ {r['capacity_index_max']}"
+        return s
+    return f"RED: {one(RED)}; AMBER: {one(AMBER)}"
 
 
 def seasonal_table(flights: pd.DataFrame) -> pd.DataFrame:
@@ -197,9 +207,8 @@ def failure_cases_md(split: str, h: pd.DataFrame, dep: pd.DataFrame, flights, ct
         return "\n".join(L)
 
     out = [f"## {split.capitalize()} set ({lead} h ahead)", "",
-           f"Candidate hours: {len(h)} airport-hours. Risk from the STARTING config rules "
-           f"(RED: P(>45) ≥ {RED['p_gt45_min']} or capacity ≤ {RED['capacity_index_max']}; AMBER: "
-           f"P(>45) ≥ {AMBER['p_gt45_min']} or capacity ≤ {AMBER['capacity_index_max']}). Rule tuning is B3.2.",
+           f"Candidate hours: {len(h)} airport-hours. Risk from the config rules ({_rule_text()}; "
+           "colour from delay risk only, L-011).",
            "", "Risk-level distribution: " + ", ".join(
                f"{k} {v}" for k, v in h["risk"].value_counts().items()), ""]
     miss = h[h["risk"] == "GREEN"].sort_values(["severe_share", "n_severe", "n_flights"],
@@ -240,7 +249,8 @@ def reason(kind, x, after, row, fl):
         if x["storm_last_6h"] == 1 or x["coco_convective"] == 1:
             r.append("a storm was observed shortly before the issue time and the model expected it to "
                      "persist into the target hour")
-        if row["cap"] <= RED["capacity_index_max"] and row["p45"] < RED["p_gt45_min"]:
+        if RED.get("capacity_index_max") is not None and row["cap"] <= RED["capacity_index_max"] \
+                and row["p45"] < RED["p_gt45_min"]:
             r.append(f"RED was triggered by the capacity condition (index {row['cap']:.2f} ≤ "
                      f"{RED['capacity_index_max']}), not by delay risk; the starting capacity "
                      "thresholds sit close to the base rate and need tuning (B3.2)")
@@ -257,4 +267,4 @@ def fix(kind, x, after):
                 "full flight schedule (real hourly volume and inbound delays); more frequent "
                 "observations (METAR every hour instead of ~9-10 per day).")
     return ("forecast weather (TAF) to tell when a storm will end; calibrated RED thresholds tuned on "
-            "validation to a stated false-alarm rate (B3.2); a full sample of flights per hour.")
+            "validation (B3.2) reviewed against the false-alarm rate; a full sample of flights per hour.")

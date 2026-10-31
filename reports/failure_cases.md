@@ -4,9 +4,9 @@ Severe = **> 45 min late or cancelled**. Every rate shows its count. Picked auto
 
 ## Validation set (6 h ahead)
 
-Candidate hours: 1145 airport-hours. Risk from the STARTING config rules (RED: P(>45) ≥ 0.3 or capacity ≤ 0.6; AMBER: P(>45) ≥ 0.15 or capacity ≤ 0.8). Rule tuning is B3.2.
+Candidate hours: 1145 airport-hours. Risk from the config rules (RED: P(>45) ≥ 0.172; AMBER: P(>45) ≥ 0.117; colour from delay risk only, L-011).
 
-Risk-level distribution: GREEN 617, AMBER 493, RED 35
+Risk-level distribution: GREEN 795, AMBER 232, RED 118
 
 ### Miss (GREEN predicted, severe delays happened): ATL, target hour 2025-02-13 22:00Z (Thu 17:00 local), forecast issued 2025-02-13 16:00Z (6 h ahead)
 
@@ -56,13 +56,13 @@ Risk-level distribution: GREEN 617, AMBER 493, RED 35
 
 **Reason (analysis):** the observations after the issue time show the weather had cleared.
 
-**What would fix it:** forecast weather (TAF) to tell when a storm will end; calibrated RED thresholds tuned on validation to a stated false-alarm rate (B3.2); a full sample of flights per hour.
+**What would fix it:** forecast weather (TAF) to tell when a storm will end; calibrated RED thresholds tuned on validation (B3.2) reviewed against the false-alarm rate; a full sample of flights per hour.
 
 ## Test set (6 h ahead)
 
-Candidate hours: 1658 airport-hours. Risk from the STARTING config rules (RED: P(>45) ≥ 0.3 or capacity ≤ 0.6; AMBER: P(>45) ≥ 0.15 or capacity ≤ 0.8). Rule tuning is B3.2.
+Candidate hours: 1658 airport-hours. Risk from the config rules (RED: P(>45) ≥ 0.172; AMBER: P(>45) ≥ 0.117; colour from delay risk only, L-011).
 
-Risk-level distribution: AMBER 854, GREEN 643, RED 161
+Risk-level distribution: GREEN 754, AMBER 519, RED 385
 
 ### Miss (GREEN predicted, severe delays happened): ATL, target hour 2025-06-28 12:00Z (Sat 08:00 local), forecast issued 2025-06-28 06:00Z (6 h ahead)
 
@@ -114,5 +114,5 @@ Risk-level distribution: AMBER 854, GREEN 643, RED 161
 
 **Reason (analysis):** the observations after the issue time show the weather had cleared.
 
-**What would fix it:** forecast weather (TAF) to tell when a storm will end; calibrated RED thresholds tuned on validation to a stated false-alarm rate (B3.2); a full sample of flights per hour.
+**What would fix it:** forecast weather (TAF) to tell when a storm will end; calibrated RED thresholds tuned on validation (B3.2) reviewed against the false-alarm rate; a full sample of flights per hour.
 
